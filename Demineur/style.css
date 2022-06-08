@@ -1,0 +1,189 @@
+/** globam */
+body{
+    margin:0
+}
+.ucfirst::first-letter{
+    text-transform:capitalize;
+}
+@media only screen and (max-width: 600px) {
+    body{
+        font-size: 6px;
+    }
+}
+@media only screen and (max-width: 850px) and (min-width: 600px) {
+    body{
+        font-size: 10px;
+    }
+}
+@media only screen and (min-width: 850px) {
+    body{
+        font-size: 14px;
+    }
+}
+/** */
+.tableButtons{
+    margin: auto;
+}
+.tableButtons button{
+    font-size: 2em;
+    padding: .25em .5em;
+}
+.tableButtons button:not(:last-child){
+    margin-right: 1em;
+}
+.GameTab.easy tr td{
+    width: 5rem;
+    height: 5rem;
+    font-size: 4rem;
+}
+.GameTab.medium tr td{
+    width: 3rem;
+    height: 3rem;
+    font-size: 3em;
+}
+.GameTab.hard tr td{
+    width: 2rem;
+    height: 2rem;
+    font-size: 2rem;
+}
+/* .GameTab tr td{
+    width: 5rem;
+    height: 5rem;
+    font-size: 5rem;
+} */
+.GameTab tr td div{
+    transition: transform 0.5s;
+    text-align: center;
+}
+.GameTab tr td:not(.reveal) div{
+    background-color: black;
+}
+.GameTab tr td.reveal div{
+    background-color: white;
+    transform: rotate3d(1, 1, 0, 0deg);
+}
+.GameTab tr td:not(.reveal):not(:hover) div{
+    transform: rotate3d(1, 1, 0, 0deg);
+}
+.GameTab tr td:not(.reveal):hover div{
+    transform: rotate3d(1, 1, 0, 45deg);
+    cursor:pointer;
+}
+
+.GameTab tr td.isbomb div{
+    transition: none;
+    border-radius: 1em;
+    background-color: red!important;
+}
+
+@keyframes isApear {
+    from {
+      background-position: -18px 0;
+    }
+    to {
+      background-position: 0 0;
+    }
+}
+@keyframes disapear {
+    from {
+        background-position: 0 0;
+        height:1em;
+        width:1em;
+    }
+    to {
+        height:0em;
+        width:0em;
+        background-position: calc(-1em + 6px) calc(-1em + 6px);
+        transform: rotate(360deg);
+    }
+}
+.GameTab tr td div::after{
+    content: " ";
+    z-index: 1;
+    position: absolute;
+    width: 1em;
+    height: 1em;
+    left: 0;
+    background-size: calc(1em - 2px);
+    background-position: -1em 0em;
+    background-repeat: no-repeat;
+    background-image: url('flag.svg');
+}
+.GameTab tr td.notQuestionmark div::after{
+    background-position: -1em 0em;
+    animation: disapear 0.75s ease 1 alternate;
+}
+.GameTab tr td.questionmark div::after{
+    background-position: 0em 0em;
+    animation: isApear 0.5s ease 1 alternate;
+}
+
+/* Popup Style */
+.popup-container {
+    visibility: hidden;
+    opacity: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background-color: rgba(15, 15, 15, 0.5);
+    z-index: 99;
+    position: absolute;
+    top: 0;
+}
+  
+.inner-container {
+    width: 30em;
+    height: 22em;
+    display: flex;
+    flex-direction: column;
+    background-color: #fff;
+    box-shadow: 0px 0px 20px 5px rgba(15, 15, 15, 0.2);
+    padding: 20px;
+    border-radius: 4px;
+}
+  
+.header {
+    border-bottom: 3px solid #3f95ec;
+    margin: 0 25px 0 25px;
+    padding: 5px;
+    font-family: Oxygen, sans-serif;
+    font-size: 22px;
+    margin-bottom: 25px;
+    text-align: center;
+}
+
+.content {
+    font-family: Ozygen, sans-serif;
+    font-size: 18px;
+    display: flex;
+    justify-content: center;
+    flex: 1;
+}
+
+.footer {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+}
+
+.btn {
+    min-width: 5em;
+    height: 2em;
+    font-family: Oxygen, sans-serif;
+    font-size: 15px;
+    margin: 0 10px 0 10px;
+    border: 0;
+}
+
+.btn-ok {
+    color: #fff;
+    background-color: #2ecc71;
+}
+
+.btn-cancel {
+    color: #fff;
+    background-color: #e74c3c;
+}
