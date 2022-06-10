@@ -309,7 +309,7 @@ class Demineur {
             elem.revealNoBombe(0)
             if(this.isWin()){
                 this.stopGame()
-                this.showProgress('C\'est gagner !')
+                this.showProgress('C\'est gagné !')
             }
         }
     }
