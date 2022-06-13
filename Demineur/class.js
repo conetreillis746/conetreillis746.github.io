@@ -159,7 +159,7 @@ class Demineur {
 
     timer = null
     divInfoGame = null
-    intervalTimer
+    intervalTimer = null
     
     gameStatus = "stop"
     gameTab = null
@@ -167,15 +167,10 @@ class Demineur {
     popup = null
 
     pressTimer = null
-    lastTouchTime = 0
 
     constructor() {
+        console.log("test");
         this.popup = new Popup()
-
-        var self = this
-
-        // lastTouchTime is used for ignoring emulated mousemove events
-        this.lastTouchTime = 0
         
         function disableHover() {
             document.body.classList.remove('hasHover')
@@ -187,10 +182,12 @@ class Demineur {
     setSize(h,l){
         var tmp = Math.pow(h, 2) + Math.pow(l, 2)
         if(window.innerHeight > window.innerWidth){
+            console.dir((window.innerHeight / window.innerWidth))
             h = tmp / (window.innerHeight / window.innerWidth)
             l = tmp - h
         }else{
-            l = tmp / (window.innerHeight / window.innerWidth)
+            console.dir((window.innerWidth / window.innerHeight))
+            l = tmp / (window.innerWidth / window.innerHeight)
             h = tmp - l
         }
         h = Math.round(Math.sqrt(h))
@@ -269,7 +266,6 @@ class Demineur {
         this.createButton()
         
         this.infoNode = []
-
         this.gameTab = document.createElement('table')
         this.gameTab.classList = 'GameTab '+this.config.mode
         for(let i=0;i<this.config.hauteur;i++){
