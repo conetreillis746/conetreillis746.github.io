@@ -42,14 +42,36 @@ class Node{
     }
 
     addEventListenerToTd(){
-        this.td.addEventListener("click", function(){
-            demineur.click(this.getAttribute('x'),this.getAttribute('y'));
-        });
-        this.td.addEventListener("contextmenu", function(ev){
-            ev.preventDefault();
-            demineur.questionMark(this.getAttribute('x'),this.getAttribute('y'));
-            return false;
-        })
+        var self = this;
+        if(isMobile){
+            var timer_keypress = 666;
+            this.td.addEventListener("touchstart", function(){
+                this.pressTimer = {
+                    timer: new Date().getTime(),
+                    timeout: window.setTimeout(function(){
+                        demineur.questionMark(self.x,self.y);
+                    }, timer_keypress, self)
+                }
+            });
+            this.td.addEventListener("touchend", function(ev){
+                if(this.pressTimer.timer + timer_keypress > new Date().getTime()){
+                    demineur.click(self.x,self.y);
+                }
+            })
+            this.td.addEventListener("contextmenu", function(ev){
+                ev.preventDefault();
+                return false;
+            })
+        }else{
+            this.td.addEventListener("click", function(){
+                demineur.click(self.x,self.y);
+            });
+            this.td.addEventListener("contextmenu", function(ev){
+                ev.preventDefault();
+                demineur.questionMark(self.x,self.y);
+                return false;
+            })
+        }
     }
 
     setBombe(x){
@@ -144,11 +166,35 @@ class Demineur {
     nbBombe = null
     popup = null
 
+    pressTimer = null
+    lastTouchTime = 0
+
     constructor() {
         this.popup = new Popup()
+
+        var self = this
+
+        // lastTouchTime is used for ignoring emulated mousemove events
+        this.lastTouchTime = 0
+        
+        function disableHover() {
+            document.body.classList.remove('hasHover')
+        }
+        document.body.classList.add('hasHover')
+        document.addEventListener('touchstart', disableHover, true)
     }
 
     setSize(h,l){
+        var tmp = Math.pow(h, 2) + Math.pow(l, 2)
+        if(window.innerHeight > window.innerWidth){
+            h = tmp / (window.innerHeight / window.innerWidth)
+            l = tmp - h
+        }else{
+            l = tmp / (window.innerHeight / window.innerWidth)
+            h = tmp - l
+        }
+        h = Math.round(Math.sqrt(h))
+        l = Math.round(Math.sqrt(l) + h%1)
         this.config.hauteur = h
         this.config.largeur = l
     }
@@ -282,7 +328,7 @@ class Demineur {
             }
         }
         if(this.nbBombe == 0){
-            console.log("No Bombe Luls!");
+            // console.log("No Bombe Luls!");
             return this.startGame()
         }
         if(this.intervalTimer == null)
@@ -294,7 +340,7 @@ class Demineur {
         if(this.gameStatus == "stop"){
             this.startGame()
             while(!this.infoNode[y][x].isSafe()){
-                console.log("Première touche pas fun!");
+                // console.log("Première touche pas fun!");
                 this.startGame()
             }
             // console.log("is Good")

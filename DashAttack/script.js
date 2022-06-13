@@ -12,8 +12,9 @@ var canvasInfo = {
             fill(20, 210, 255, (directionAttack?255:150))
         }
     },
-    acceleration: 1,
-    paddingEntitiesEnemies: 0.5,
+    baseAcceleration: 1,
+    acceleration: 0,
+    paddingEntitiesEnemies: 3,
     loose: function(){
         canvasInfo.pause = true;
         canvasInfo.showProgress('Vous avez Perdu')
@@ -53,12 +54,9 @@ var canvasInfo = {
 
         popup.showPopup()
 
-        // reset game
-        rightEnemies = [];
-        leftEnemies = [];
-        heroes.reset()
-        canvasInfo.reset();
         document.getElementById('buttonRetry').addEventListener('click',function(e){
+            canvasInfo.reset();
+
             e.preventDefault();
             popup.hidePopup()
             window.setTimeout(function(){
@@ -70,11 +68,16 @@ var canvasInfo = {
     kill: 0,
     pause: true,
     reset: function(){
+        // reset game
+        rightEnemies = [];
+        leftEnemies = [];
+        heroes.reset()
+
         canvasInfo.kill = 0;
-        canvasInfo.acceleration = 1;
         canvasInfo.time = 0;
         canvasInfo.pause = true;
-    }
+    },
+    lastPattern: -1,
 }
 canvasInfo.baseLine = canvasInfo.height - 50;
 
@@ -82,7 +85,7 @@ canvasInfo.baseLine = canvasInfo.height - 50;
 var heroes = null;
 const defaultHero = {
     actif: false,
-    range: 2 * canvasInfo.tileSize,
+    range: 5 * canvasInfo.tileSize,
     rangeDash: 15,
     width: 3,
     height: 10,
@@ -92,8 +95,8 @@ const defaultHero = {
         left: false,
         right: false
     },
-    maxSpeed:10,
-    speed:0.2
+    maxSpeed: 20,
+    speed: 0.2
 };
 
 // liste des enemies
@@ -107,6 +110,13 @@ var typeEnnemie = {
         speed: 1,
         width: 3,
         height: 10,
+        color: "#53ca77"
+    },
+    "reverse": {
+        health: 3,
+        speed: 0.5,
+        width: 2,
+        height: 7,
         color: "#53ca77"
     },
     "tank": {
@@ -124,6 +134,15 @@ var typeEnnemie = {
             if(this.before && this.before.alive && this.before.getSpeed() < speed){
                 speed = this.before.getSpeed()
             }
+
+            
+            if(this.before){
+                // console.log({this:this.x + this.getWidth() / 2 + canvasInfo.paddingEntitiesEnemies * canvasInfo.tileSize,before:this.before.x - this.before.getWidth() / 2});
+                if(this.x < heroes.x && this.x + this.getWidth() / 2 + canvasInfo.paddingEntitiesEnemies * canvasInfo.tileSize >= this.before.x - this.before.getWidth() / 2)
+                    speed = 0;
+                if(this.x > heroes.x && this.x - this.getWidth() / 2 - canvasInfo.paddingEntitiesEnemies * canvasInfo.tileSize <= this.before.x + this.before.getWidth() / 2)
+                    speed = 0;
+            }
             // take the speed of the more slow
             return speed
         }
@@ -138,14 +157,14 @@ var patternEnnemie = [
         ["tank","normal","normal","normal",],
         ["tank","normal","normal","normal",]
     ],
-    // [
-    //     ["normal","normal","normal",],
-    //     ["normal","normal","normal",]
-    // ],
-    // [
-    //     ["normal","tank","normal","normal",],
-    //     ["normal","tank","normal","normal",]
-    // ],
+    [
+        ["normal","normal","normal",],
+        ["normal","normal","normal",]
+    ],
+    [
+        ["normal","tank","normal","normal",],
+        ["normal","tank","normal","normal",]
+    ],
 ];
 
 // class
@@ -177,6 +196,9 @@ class entite{
 }
 
 class heroe extends entite{
+    isCombo(isKilled){
+        
+    }
     draw(){
         this.drawself()
         this.showRange()
@@ -206,14 +228,14 @@ class heroe extends entite{
             startNewGame() // if no game start
             return
         }
-        if(this.detect.right) this.dashAttack = "right"
+        if(this.detect.right && !this.dashAttack) this.dashAttack = "right"
     }
     leftDash(){
         if(canvasInfo.time == 0 && rightEnemies.length==0 && leftEnemies.length==0){
             startNewGame() // if no game start
             return
         }
-        if(this.detect.left) this.dashAttack = "left"
+        if(this.detect.left && !this.dashAttack) this.dashAttack = "left"
     }
     update(){
         if(canvasInfo.pause) return
@@ -232,9 +254,10 @@ class heroe extends entite{
             if(maxDist < 0) maxDist = 0 // backDash isn't possibru
             if(this.speed > maxDist) this.speed = maxDist; // cannot go futher than the ennemi
             if(this.speed == 0){ // if can hit the enemi
-                enemiToHit.hit();
+                let isKilled = enemiToHit.hit();
                 this.dashAttack = false;
                 this.speed = 0.2;
+                this.isCombo(isKilled)
             }else{
                 let speed = this.speed;
                 if(this.dashAttack == "right") speed = speed * -1;
@@ -319,6 +342,7 @@ class enemy extends entite{
         this.health--;
         if(this.health <= 0)
             this.kill();
+        return this.alive
     }
     kill(){
         this.alive = false
@@ -348,6 +372,12 @@ function setup() {
 // each time
 function draw() {
     clear();
+    
+    let fps = frameRate();
+    fill(255);
+    stroke(0);
+    text("FPS: " + fps.toFixed(2), 10, height - 10);
+    
     if(canvasInfo.time ==0){
         showControl();
     }
@@ -379,6 +409,7 @@ function startNewGame(){
     canvasInfo.ready = false;
     heroes.actif = true
     canvasInfo.pause = false
+    canvasInfo.acceleration = canvasInfo.baseAcceleration
     spawn();
 }
 
@@ -387,8 +418,13 @@ function spawn(){
     canvasInfo.acceleration+=0.1;
     var left = 0;
     var right = canvasInfo.width;
-    let random = (Math.random() * patternEnnemie.length);
-    random-=random%1;
+    let random = canvasInfo.lastPattern
+    while(random == canvasInfo.lastPattern){
+        random = (Math.random() * patternEnnemie.length);
+        random-=random%1;
+    }
+    canvasInfo.lastPattern = random;
+    console.log("Pattern : " + random);
     let dir = Math.random() < 0.5 ? "left" : "right";
     for(let i = 0; i < patternEnnemie[random][0].length; i++){
         for(let j = 0;j <= 1;j++){

@@ -62,16 +62,20 @@ body{
     background-color: white;
     transform: rotate3d(1, 1, 0, 0deg);
 }
-.GameTab tr td:not(.reveal):not(:hover) div{
+body.hasHover .GameTab tr td:not(.reveal):not(:hover) div{
     transform: rotate3d(1, 1, 0, 0deg);
 }
-.GameTab tr td:not(.reveal):hover div{
+body.hasHover .GameTab tr td:not(.reveal):hover div{
     transform: rotate3d(1, 1, 0, 45deg);
     cursor:pointer;
 }
+body:not(.hasHover) .GameTab tr td div::after{
+    top:unset;
+    left:unset;
+    transform: translate(-49px, 7px);
+}
 
 .GameTab tr td.isbomb div{
-    transition: none;
     border-radius: 1em;
     background-color: red!important;
 }
