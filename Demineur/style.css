@@ -73,9 +73,7 @@ body.hasHover .GameTab tr td:not(.reveal):hover div{
     cursor:pointer;
 }
 body:not(.hasHover) .GameTab tr td div::after{
-    top:unset;
-    left:unset;
-    transform: translate(-49px, 7px);
+    /* transform: translate(-49px, 7px); */
 }
 
 .GameTab tr td.isbomb div{
@@ -85,7 +83,7 @@ body:not(.hasHover) .GameTab tr td div::after{
 
 @keyframes isApear {
     from {
-        height: 5em;
+        height: 10em;
         background-position: 0.1em -1em;
     }
     to {
@@ -100,8 +98,12 @@ body:not(.hasHover) .GameTab tr td div::after{
         height:0em;
         width:0em;
         background-position: calc(-1em + 6px) calc(-1em + 6px);
-        transform: translate(-50%, -50%) rotate(360deg);
+        transform: rotate(360deg);
     }
+}
+
+body.hasHover .GameTab tr td div::after{
+    bottom: 0;
 }
 .GameTab tr td div::after{
     content: " ";
@@ -109,9 +111,6 @@ body:not(.hasHover) .GameTab tr td div::after{
     position: absolute;
     width: 1.2em;
     height: 1.2em;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%);
     background-size: calc(1em - 2px);
     background-position: -1em 0.2em;
     background-repeat: no-repeat;

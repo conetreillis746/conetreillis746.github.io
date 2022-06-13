@@ -12,7 +12,7 @@ class Node{
         this.y = y
         this.pos = y + '/' + x
         this.td = td
-        this.td.innerHTML = '<div>&nbsp;</div>'
+        this.td.innerHTML = '<div style="display:flex;justify-content:center;align-items:center;">&nbsp;</div>'
         this.td.setAttribute('x',this.x)
         this.td.setAttribute('y',this.y)
         this.addEventListenerToTd()
