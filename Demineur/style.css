@@ -52,7 +52,7 @@ body{
     font-size: 5rem;
 } */
 .GameTab tr td div{
-    transition: transform 0.5s;
+    transition: border-radius 0.5s;
     text-align: center;
 }
 .GameTab tr td:not(.reveal) div{
@@ -61,12 +61,15 @@ body{
 .GameTab tr td.reveal div{
     background-color: white;
     transform: rotate3d(1, 1, 0, 0deg);
+    border-radius: 0em;
 }
 body.hasHover .GameTab tr td:not(.reveal):not(:hover) div{
+    border-radius: 0em;
     transform: rotate3d(1, 1, 0, 0deg);
 }
 body.hasHover .GameTab tr td:not(.reveal):hover div{
-    transform: rotate3d(1, 1, 0, 45deg);
+    border-radius: 1em;
+    transform: rotate3d(1, 1, 0, 0deg);
     cursor:pointer;
 }
 body:not(.hasHover) .GameTab tr td div::after{
@@ -82,43 +85,45 @@ body:not(.hasHover) .GameTab tr td div::after{
 
 @keyframes isApear {
     from {
-      background-position: -18px 0;
+        height: 5em;
+        background-position: 0.1em -1em;
     }
     to {
-      background-position: 0 0;
+        background-position: 0.1em 0.1em;
     }
 }
 @keyframes disapear {
     from {
-        background-position: 0 0;
-        height:1em;
-        width:1em;
+        background-position:  0.1em 0.1em;
     }
     to {
         height:0em;
         width:0em;
         background-position: calc(-1em + 6px) calc(-1em + 6px);
-        transform: rotate(360deg);
+        transform: translate(-50%, -50%) rotate(360deg);
     }
 }
 .GameTab tr td div::after{
     content: " ";
     z-index: 1;
     position: absolute;
-    width: 1em;
-    height: 1em;
-    left: 0;
+    width: 1.2em;
+    height: 1.2em;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
     background-size: calc(1em - 2px);
-    background-position: -1em 0em;
+    background-position: -1em 0.2em;
     background-repeat: no-repeat;
     background-image: url('flag.svg');
+    overflow:visible;
 }
 .GameTab tr td.notQuestionmark div::after{
-    background-position: -1em 0em;
+    background-position: -1em 0.1em;
     animation: disapear 0.75s ease 1 alternate;
 }
 .GameTab tr td.questionmark div::after{
-    background-position: 0em 0em;
+    background-position: 0.1em 0.1em;
     animation: isApear 0.5s ease 1 alternate;
 }
 
