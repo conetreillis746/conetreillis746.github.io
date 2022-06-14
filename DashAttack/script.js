@@ -14,20 +14,15 @@ var canvasInfo = {
     baseAcceleration: 1,
     acceleration: 0,
     paddingEntitiesEnemies: 3,
-    loose: function(){
+    endGame: function(){
         canvasInfo.pause = true;
-        canvasInfo.showProgress('Vous avez Perdu')
-    },
-    win: function(){
-        canvasInfo.pause = true;
-        canvasInfo.showProgress('C\'est gagné !')
+        canvasInfo.showProgress('Votre Score')
     },
     showProgress(titre){
         popup.setTitle(titre)
 
-        let percentDiscover = 0
-
         let tab = [
+            ['Points', {style:'font-size:2em', html: canvasInfo.points}],
             ['Kill', {style:'font-size:2em', html: canvasInfo.kill}],
             ['Time', {style:'font-size:2em', html: getTimer(canvasInfo.time)}]
         ]
@@ -36,9 +31,9 @@ var canvasInfo = {
         tab.forEach(function(row){
             row.forEach(function(value,index){
                 if(value.html == undefined){
-                    tr[index]+= "<td width='"+Math.round(1/row.length * 100)+"%'>"+value+"</td>"
+                    tr[index]+= "<td width='"+Math.round(1/tab.length * 100)+"%'>"+value+"</td>"
                 }else{
-                    tr[index]+= "<td width='"+Math.round(1/row.length * 100)+"%' style='"+value.style+"'>"+value.html+"</td>"
+                    tr[index]+= "<td width='"+Math.round(1/tab.length * 100)+"%' style='"+value.style+"'>"+value.html+"</td>"
                 }
             })
         })
@@ -54,9 +49,9 @@ var canvasInfo = {
         popup.showPopup()
 
         document.getElementById('buttonRetry').addEventListener('click',function(e){
+            e.preventDefault();
             canvasInfo.reset();
 
-            e.preventDefault();
             popup.hidePopup()
             window.setTimeout(function(){
                 canvasInfo.ready = true
@@ -65,6 +60,7 @@ var canvasInfo = {
     },
     time: 0,
     kill: 0,
+    points: 0,
     pause: true,
     reset: function(){
         // reset game
@@ -82,6 +78,7 @@ canvasInfo.baseLine = canvasInfo.height - 50;
 
 var heroes = null;
 const defaultHero = {
+    combo: 0,
     actif: false,
     range: 8 * canvasInfo.tileSize,
     rangeDash: 15,
@@ -100,6 +97,7 @@ const defaultHero = {
 // enemies List
 var leftEnemies = [];
 var rightEnemies = [];
+var entitiesPlus = [];
 
 var typeEnnemie = {
     "normal": {
@@ -160,7 +158,7 @@ var typeEnnemie = {
     },
     "tank": {
         health: 3,
-        speed: 0.5,
+        speed: 0.7,
         width: 5,
         height: 8,
         color: "#d7f250",
@@ -194,8 +192,11 @@ var typeEnnemie = {
         width: 5,
         height: 2,
         baseHeight: canvasInfo.baseLine - 7 * canvasInfo.tileSize,
-        color: "#d7f250",
+        color: "#ffd966",
         speedByTime: true,
+        bonusPoint(){
+            return (this.time - this.time%60)/60
+        }
     },
     "speed_range": {
         health: 1,
@@ -203,13 +204,39 @@ var typeEnnemie = {
         width: 5,
         height: 2,
         baseHeight: canvasInfo.baseLine - 7 * canvasInfo.tileSize,
-        color: "#d7f250",
+        color: "#ffff66",
         speedByTime: true,
         getWidthPos(){
             return this.getWidth() + 15 * canvasInfo.tileSize
         },
         constructorplus(x,y, option){
-            this.x = x + 25 * canvasInfo.tileSize * (this.whatDirection() == 'left'? -1 : 1)
+            this.x+= 25 * canvasInfo.tileSize * (this.whatDirection() == 'left'? -1 : 1)
+        },
+        bonusPoint(){
+            return (this.time - this.time%60)/60
+        }
+    },
+    "mage_range": {
+        health: 1,
+        speed: 1,
+        width: 2,
+        height: 5,
+        color: "#66b3ff",
+        beforeCast: 350,
+        needCast: 30,
+        cast: false,
+        draw(){
+            this.drawself()
+            this.update()
+            // for each x time
+            if(this.time % this.beforeCast == 0 && !this.cast){
+                this.cast = true
+                this.time = 0
+            }
+            if(this.cast && this.time % this.needCast){
+                entitiesPlus.push(new entite())
+                this.time = 0
+            }
         }
     }
 };
@@ -271,19 +298,26 @@ class entite{
 }
 
 class heroe extends entite{
-    isCombo(isKilled){
-        
+    showCombo(){
+        textSize(32);
+        fill(255);
+        stroke(0);
+        text("+ " + this.combo, this.x - this.getWidth() * (this.combo<10?0.66:0.5), (this.baseHeight - this.height * canvasInfo.tileSize) / 2);
     }
-    draw(){
-        this.drawself()
-        this.showRange()
+    isCombo(isKilled, enemi){
+        canvasInfo.points+= (1) + this.combo
+        if(isKilled){
+            this.combo+= 1 + enemi.bonusPoint()
+        }else{
+            this.combo = 0
+        }
     }
     showRange(){
-        let height = 5;
-        canvasInfo.color.right(this.dashAttack == "right" || this.detect.right);
-        rect(this.x, canvasInfo.baseLine + 5, this.getRange(), height);
-        canvasInfo.color.left(this.dashAttack == "left" || this.detect.left);
-        rect(this.x - this.getRange(), canvasInfo.baseLine + 5, this.getRange(), height);
+        let height = 5
+        canvasInfo.color.right(this.dashAttack == "right" || this.detect.right)
+        rect(this.x, canvasInfo.baseLine + 5, this.getRange(), height)
+        canvasInfo.color.left(this.dashAttack == "left" || this.detect.left)
+        rect(this.x - this.getRange(), canvasInfo.baseLine + 5, this.getRange(), height)
     }
     constructorplus(x,y, option){
         this.reset = function(){
@@ -297,7 +331,6 @@ class heroe extends entite{
     getRange(){
         return canvasInfo.tileSize * this.rangeDash + this.getWidth()/2;
     }
-
     rightDash(){
         if(canvasInfo.time == 0 && rightEnemies.length==0 && leftEnemies.length==0){
             startNewGame() // if no game start
@@ -313,6 +346,10 @@ class heroe extends entite{
         if(this.detect.left && !this.dashAttack) this.dashAttack = "left"
     }
     update(){
+        this.showRange();
+        if(this.combo>1){
+            this.showCombo()
+        }
         if(canvasInfo.pause) return
         this.detect.left = false;
         this.detect.right = false;
@@ -329,10 +366,10 @@ class heroe extends entite{
             if(maxDist < 0) maxDist = 0 // backDash isn't possibru
             if(this.speed > maxDist) this.speed = maxDist; // cannot go futher than the ennemi
             if(this.speed == 0){ // if can hit the enemi
-                let isKilled = enemiToHit.hit();
+                let isKilled = !enemiToHit.hit()
                 this.dashAttack = false;
                 this.speed = 0.2;
-                this.isCombo(isKilled)
+                this.isCombo(isKilled, enemiToHit)
             }else{
                 let speed = this.speed;
                 if(this.dashAttack == "right") speed = speed * -1;
@@ -350,8 +387,14 @@ class heroe extends entite{
 }
 
 class enemy extends entite{
+    constructorplus(x,y, option){
+        this.maxHealth = this.health
+    }
     whatDirection(){
         return (this.x < heroes.x?"left":"right")
+    }
+    bonusPoint(){
+        return 0
     }
     getSpeed(){
         let speed = this.speed;
@@ -395,14 +438,14 @@ class enemy extends entite{
             this.x += changePosition
             // if enemy x + enemy width < heros x - hero width
             if(this.x + my_mid_witdh > heroes.x - hero_mid_witdh){
-                canvasInfo.loose()
+                canvasInfo.endGame()
             }
         }
         if(this.whatDirection() == "right"){
             this.x -= changePosition
             // if enemy x + enemy width < heros x - hero width
             if(this.x - my_mid_witdh < heroes.x + hero_mid_witdh){
-                canvasInfo.loose()
+                canvasInfo.endGame()
             }
         }
     }
@@ -421,7 +464,7 @@ class enemy extends entite{
         return this.width * canvasInfo.tileSize
     }
     hit(){
-        this.stun = 20;
+        this.stun += 20;
         this.health--;
         if(this.health <= 0)
             this.kill();
@@ -478,7 +521,6 @@ function draw() {
     if(canvasInfo.time > 0 && rightEnemies.length == 0 && leftEnemies.length ==0){
         spawn(); // respawn if game is in progress and after all enemies are killed
     }
-    heroes.draw();
     // show the line bottom
     strokeWeight(1)
     fill(255)
@@ -493,10 +535,10 @@ function draw() {
         enemi.update();
         enemi.draw();
     });
-    heroes.update();
+    heroes.draw();
 
     if(!canvasInfo.pause) canvasInfo.time++;
-    showMeFPS();
+    // showMeFPS();
 }
 
 function startNewGame(){
