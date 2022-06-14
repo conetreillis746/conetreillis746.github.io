@@ -1,4 +1,3 @@
-// info sur le canvas
 var canvasInfo = {
     ready: true,
     width: 800,
@@ -30,7 +29,7 @@ var canvasInfo = {
 
         let tab = [
             ['Kill', {style:'font-size:2em', html: canvasInfo.kill}],
-            ['Temps', {style:'font-size:2em', html: getTimer(canvasInfo.time)}]
+            ['Time', {style:'font-size:2em', html: getTimer(canvasInfo.time)}]
         ]
 
         let tr = [[],[]]
@@ -81,11 +80,10 @@ var canvasInfo = {
 }
 canvasInfo.baseLine = canvasInfo.height - 50;
 
-// stockage du hero
 var heroes = null;
 const defaultHero = {
     actif: false,
-    range: 5 * canvasInfo.tileSize,
+    range: 8 * canvasInfo.tileSize,
     rangeDash: 15,
     width: 3,
     height: 10,
@@ -99,11 +97,10 @@ const defaultHero = {
     speed: 0.2
 };
 
-// liste des enemies
+// enemies List
 var leftEnemies = [];
 var rightEnemies = [];
 
-// type d'ennemie
 var typeEnnemie = {
     "normal": {
         health: 1,
@@ -114,17 +111,58 @@ var typeEnnemie = {
     },
     "reverse": {
         health: 3,
-        speed: 0.5,
+        speed: 1,
         width: 2,
         height: 7,
-        color: "#53ca77"
+        color: "#53ca77",
+        hit(){
+            let leftDirect = this.whatDirection()=='left';
+            if(leftDirect){
+                let tmp = leftEnemies.shift()
+                if(leftEnemies.length>0)
+                    leftEnemies[0].before = null;
+                rightEnemies.unshift(tmp)
+                if(rightEnemies.length>1)
+                    rightEnemies[1].before = tmp;
+            }else{
+                let tmp = rightEnemies.shift()
+                if(rightEnemies.length>0)
+                    rightEnemies[0].before = null;
+                leftEnemies.unshift(tmp)
+                if(leftEnemies.length>1)
+                    leftEnemies[1].before = tmp;
+            }
+            let tmp = heroes.x - this.x;
+            if(tmp > -heroes.range && !leftDirect)
+                tmp = -heroes.range
+            if(tmp < heroes.range && leftDirect)
+                tmp = heroes.range
+            this.x = tmp + heroes.x;
+            this.stun = 50;
+            this.health--;
+            if(this.health <= 0)
+                this.kill();
+            return this.alive
+        },
+        showHealtBar(){
+            let height = 5
+            let width = 20
+            var y = canvasInfo.baseLine + 15
+            let directionLeft = this.whatDirection()=='left'
+            for(let i = 1; i <= this.health; i++){
+                y+=2+height
+                if(directionLeft) canvasInfo.color.left(true)
+                else canvasInfo.color.right(true)
+                rect(this.x - width/2, y, width, height)
+                directionLeft = !directionLeft
+            }
+        }
     },
     "tank": {
         health: 3,
         speed: 0.5,
         width: 5,
         height: 8,
-        stopAtMax: true,
         color: "#d7f250",
         getSpeed(){
             let speed = this.speed;
@@ -134,40 +172,81 @@ var typeEnnemie = {
             if(this.before && this.before.alive && this.before.getSpeed() < speed){
                 speed = this.before.getSpeed()
             }
-
             
             if(this.before){
                 // console.log({this:this.x + this.getWidth() / 2 + canvasInfo.paddingEntitiesEnemies * canvasInfo.tileSize,before:this.before.x - this.before.getWidth() / 2});
-                if(this.x < heroes.x && this.x + this.getWidth() / 2 + canvasInfo.paddingEntitiesEnemies * canvasInfo.tileSize >= this.before.x - this.before.getWidth() / 2)
+                if(this.whatDirection()=='left' && this.x + this.getWidth() / 2 + canvasInfo.paddingEntitiesEnemies * canvasInfo.tileSize >= this.before.x - this.before.getWidth() / 2){
                     speed = 0;
-                if(this.x > heroes.x && this.x - this.getWidth() / 2 - canvasInfo.paddingEntitiesEnemies * canvasInfo.tileSize <= this.before.x + this.before.getWidth() / 2)
+                    this.x = this.before.x - this.before.getWidth() / 2 - (this.getWidth() / 2 + canvasInfo.paddingEntitiesEnemies * canvasInfo.tileSize)
+                }
+                if(this.whatDirection()=='right' && this.x - this.getWidth() / 2 - canvasInfo.paddingEntitiesEnemies * canvasInfo.tileSize <= this.before.x + this.before.getWidth() / 2){
                     speed = 0;
+                    this.x = this.before.x + this.before.getWidth() / 2 + (this.getWidth() / 2 + canvasInfo.paddingEntitiesEnemies * canvasInfo.tileSize)
+                }
             }
             // take the speed of the more slow
             return speed
         }
     },
-
+    "speed": {
+        health: 1,
+        speed: 2,
+        width: 5,
+        height: 2,
+        stopAtMax: true,
+        time: 0,
+        color: "#d7f250",
+        drawself(){
+            fill(this.color)
+            rect(this.x - this.getWidth()/2, canvasInfo.baseLine - 7 * canvasInfo.tileSize, this.getWidth(), this.getHeight());
+        },
+        getSpeed(){
+            let speed = this.speed * (1 + (this.time%20)/20);
+            this.time++;
+            // if(this.before && this.before.getSpeed() < this.speed){
+            //     speed = this.before.getSpeed()
+            // }
+            if(this.before){
+                // console.log({this:this.x + this.getWidth() / 2 + canvasInfo.paddingEntitiesEnemies * canvasInfo.tileSize,before:this.before.x - this.before.getWidth() / 2});
+                if(this.whatDirection()=='left' && this.x + this.getWidth() / 2 + canvasInfo.paddingEntitiesEnemies * canvasInfo.tileSize >= this.before.x - this.before.getWidth() / 2){
+                    speed = 0;
+                    this.x = this.before.x - this.before.getWidth() / 2 - (this.getWidth() / 2 + canvasInfo.paddingEntitiesEnemies * canvasInfo.tileSize)
+                }
+                if(this.whatDirection()=='right' && this.x - this.getWidth() / 2 - canvasInfo.paddingEntitiesEnemies * canvasInfo.tileSize <= this.before.x + this.before.getWidth() / 2){
+                    speed = 0;
+                    this.x = this.before.x + this.before.getWidth() / 2 + (this.getWidth() / 2 + canvasInfo.paddingEntitiesEnemies * canvasInfo.tileSize)
+                }
+            }
+            // take the speed of the more slow closer to the hero
+            return speed
+        }
+    }
 };
 
 var patternEnnemie = [
-    /* array for two direction */
-    /* array for two direction */
+    /* array of array for two direction */
+    // [
+    //     ["tank","normal","normal","normal",],
+    //     ["tank","normal","normal","normal",]
+    // ],
     [
-        ["tank","normal","normal","normal",],
-        ["tank","normal","normal","normal",]
+        ["","","speed","","","","","speed","",""],
+        ["speed","","","","","speed","","","","","speed"]
     ],
-    [
-        ["normal","normal","normal",],
-        ["normal","normal","normal",]
-    ],
-    [
-        ["normal","tank","normal","normal",],
-        ["normal","tank","normal","normal",]
-    ],
+    // [
+    //     ["reverse","normal","normal",],
+    //     ["reverse","normal","normal",]
+    // ],
+    // [
+    //     ["normal","tank","normal","normal",],
+    //     ["normal","tank","normal","normal",]
+    // ],
+    // [
+    //     ["normal","normal","normal","normal","normal","normal","normal","normal","normal",],
+    //     ["","","","","","","","","normal",]
+    // ],
 ];
 
-// class
 class entite{
     constructor(x,y, option){
         this.stun = 0;
@@ -275,6 +354,9 @@ class heroe extends entite{
 }
 
 class enemy extends entite{
+    whatDirection(){
+        return (this.x < heroes.x?"left":"right")
+    }
     getSpeed(){
         let speed = this.speed;
         // if(this.before && this.before.getSpeed() < this.speed){
@@ -282,10 +364,14 @@ class enemy extends entite{
         // }
         if(this.before){
             // console.log({this:this.x + this.getWidth() / 2 + canvasInfo.paddingEntitiesEnemies * canvasInfo.tileSize,before:this.before.x - this.before.getWidth() / 2});
-            if(this.x < heroes.x && this.x + this.getWidth() / 2 + canvasInfo.paddingEntitiesEnemies * canvasInfo.tileSize >= this.before.x - this.before.getWidth() / 2)
+            if(this.whatDirection()=='left' && this.x + this.getWidth() / 2 + canvasInfo.paddingEntitiesEnemies * canvasInfo.tileSize >= this.before.x - this.before.getWidth() / 2){
                 speed = 0;
-            if(this.x > heroes.x && this.x - this.getWidth() / 2 - canvasInfo.paddingEntitiesEnemies * canvasInfo.tileSize <= this.before.x + this.before.getWidth() / 2)
+                this.x = this.before.x - this.before.getWidth() / 2 - (this.getWidth() / 2 + canvasInfo.paddingEntitiesEnemies * canvasInfo.tileSize)
+            }
+            if(this.whatDirection()=='right' && this.x - this.getWidth() / 2 - canvasInfo.paddingEntitiesEnemies * canvasInfo.tileSize <= this.before.x + this.before.getWidth() / 2){
                 speed = 0;
+                this.x = this.before.x + this.before.getWidth() / 2 + (this.getWidth() / 2 + canvasInfo.paddingEntitiesEnemies * canvasInfo.tileSize)
+            }
         }
         // take the speed of the more slow closer to the hero
         return speed
@@ -293,34 +379,34 @@ class enemy extends entite{
     update(){
         this.showHealtBar()
         if(this.before && false){
-            // distance from me and ennemi closer to the hero before
+            // distance from me and ennemi before if exist
             fill(255);
             rect(this.x < heroes.x? this.x + this.getWidth() / 2 : this.x - this.getWidth() / 2 - 5,this.y,canvasInfo.paddingEntitiesEnemies * canvasInfo.tileSize,5);
         }
         if(canvasInfo.pause) return // not update if game is pause
         if(this.stun > 0){
-            this.stun--;
+            this.stun -= 1 * canvasInfo.acceleration;
             return;
-        }
-        let speed = this.getSpeed();
-        // move to the hero
-        let changePosition = speed * canvasInfo.acceleration;
-        if(this.x < heroes.x){
-            this.x += changePosition
-        }
-        if(this.x > heroes.x){
-            this.x -= changePosition
         }
         // cannot bypass the hero
         let hero_mid_witdh = heroes.getWidth() / 2
         let my_mid_witdh = this.getWidth() / 2
 
-        // si enemy x + enemy width < heros x - hero width
-        if(this.x < heroes.x && this.x + my_mid_witdh > heroes.x - hero_mid_witdh){
-            canvasInfo.loose()
+        // move to the hero
+        let changePosition = this.getSpeed() * canvasInfo.acceleration;
+        if(this.whatDirection() == "left"){
+            this.x += changePosition
+            // if enemy x + enemy width < heros x - hero width
+            if(this.x + my_mid_witdh > heroes.x - hero_mid_witdh){
+                canvasInfo.loose()
+            }
         }
-        if(this.x > heroes.x && this.x - my_mid_witdh < heroes.x + hero_mid_witdh){
-            canvasInfo.loose()
+        if(this.whatDirection() == "right"){
+            this.x -= changePosition
+            // if enemy x + enemy width < heros x - hero width
+            if(this.x - my_mid_witdh < heroes.x + hero_mid_witdh){
+                canvasInfo.loose()
+            }
         }
     }
     showHealtBar(){
@@ -329,8 +415,8 @@ class enemy extends entite{
         var y = canvasInfo.baseLine + 15
         for(let i = 1; i <= this.health; i++){
             y+=2+height
-            if(this.x > heroes.x) canvasInfo.color.right(true)
-            else canvasInfo.color.left(true);
+            if(this.whatDirection()=='left') canvasInfo.color.left(true)
+            else canvasInfo.color.right(true);
             rect(this.x - width/2, y, width, height)
         }
     }
@@ -369,16 +455,27 @@ function setup() {
     document.onkeydown = logKey;
 }
 
+var tab_fps = []
+
+function showMeFPS(){
+    let fps = frameRate();
+    tab_fps.push(fps)
+    if(tab_fps.length > 60)
+        tab_fps.shift()
+    let total_fps = tab_fps.reduce(function(prev,curr,tab){
+        return prev + curr;
+    }) / tab_fps.length
+    fill(255);
+    stroke(0);
+    text("FPS: " + fps.toFixed(0), 10, 20);
+    text("avg FPS: " + total_fps.toFixed(0), 10, 10);
+}
+
 // each time
 function draw() {
     clear();
     
-    let fps = frameRate();
-    fill(255);
-    stroke(0);
-    text("FPS: " + fps.toFixed(2), 10, height - 10);
-    
-    if(canvasInfo.time ==0){
+    if(canvasInfo.time ==0){ // game doesn't start
         showControl();
     }
     if(canvasInfo.time > 0 && rightEnemies.length == 0 && leftEnemies.length ==0){
@@ -402,6 +499,7 @@ function draw() {
     heroes.update();
 
     if(!canvasInfo.pause) canvasInfo.time++;
+    showMeFPS();
 }
 
 function startNewGame(){
@@ -419,7 +517,7 @@ function spawn(){
     var left = 0;
     var right = canvasInfo.width;
     let random = canvasInfo.lastPattern
-    while(random == canvasInfo.lastPattern){
+    while(random == canvasInfo.lastPattern && patternEnnemie.length>1 || random<0){
         random = (Math.random() * patternEnnemie.length);
         random-=random%1;
     }
