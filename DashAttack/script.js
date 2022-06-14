@@ -138,7 +138,7 @@ var typeEnnemie = {
             if(tmp < heroes.range && leftDirect)
                 tmp = heroes.range
             this.x = tmp + heroes.x;
-            this.stun = 50;
+            this.stun = 80;
             this.health--;
             if(this.health <= 0)
                 this.kill();
@@ -190,76 +190,69 @@ var typeEnnemie = {
     },
     "speed": {
         health: 1,
-        speed: 2,
+        speed: 1.5,
         width: 5,
         height: 2,
-        stopAtMax: true,
-        time: 0,
+        baseHeight: canvasInfo.baseLine - 7 * canvasInfo.tileSize,
         color: "#d7f250",
-        drawself(){
-            fill(this.color)
-            rect(this.x - this.getWidth()/2, canvasInfo.baseLine - 7 * canvasInfo.tileSize, this.getWidth(), this.getHeight());
+        speedByTime: true,
+    },
+    "speed_range": {
+        health: 1,
+        speed: 1.5,
+        width: 5,
+        height: 2,
+        baseHeight: canvasInfo.baseLine - 7 * canvasInfo.tileSize,
+        color: "#d7f250",
+        speedByTime: true,
+        getWidthPos(){
+            return this.getWidth() + 15 * canvasInfo.tileSize
         },
-        getSpeed(){
-            let speed = this.speed * (1 + (this.time%20)/20);
-            this.time++;
-            // if(this.before && this.before.getSpeed() < this.speed){
-            //     speed = this.before.getSpeed()
-            // }
-            if(this.before){
-                // console.log({this:this.x + this.getWidth() / 2 + canvasInfo.paddingEntitiesEnemies * canvasInfo.tileSize,before:this.before.x - this.before.getWidth() / 2});
-                if(this.whatDirection()=='left' && this.x + this.getWidth() / 2 + canvasInfo.paddingEntitiesEnemies * canvasInfo.tileSize >= this.before.x - this.before.getWidth() / 2){
-                    speed = 0;
-                    this.x = this.before.x - this.before.getWidth() / 2 - (this.getWidth() / 2 + canvasInfo.paddingEntitiesEnemies * canvasInfo.tileSize)
-                }
-                if(this.whatDirection()=='right' && this.x - this.getWidth() / 2 - canvasInfo.paddingEntitiesEnemies * canvasInfo.tileSize <= this.before.x + this.before.getWidth() / 2){
-                    speed = 0;
-                    this.x = this.before.x + this.before.getWidth() / 2 + (this.getWidth() / 2 + canvasInfo.paddingEntitiesEnemies * canvasInfo.tileSize)
-                }
-            }
-            // take the speed of the more slow closer to the hero
-            return speed
+        constructorplus(x,y, option){
+            this.x = x + 25 * canvasInfo.tileSize * (this.whatDirection() == 'left'? -1 : 1)
         }
     }
 };
 
 var patternEnnemie = [
     /* array of array for two direction */
-    // [
-    //     ["tank","normal","normal","normal",],
-    //     ["tank","normal","normal","normal",]
-    // ],
     [
-        ["","","speed","","","","","speed","",""],
-        ["speed","","","","","speed","","","","","speed"]
+        ["tank","normal","normal","normal",],
+        ["tank","normal","normal","normal",]
     ],
-    // [
-    //     ["reverse","normal","normal",],
-    //     ["reverse","normal","normal",]
-    // ],
-    // [
-    //     ["normal","tank","normal","normal",],
-    //     ["normal","tank","normal","normal",]
-    // ],
-    // [
-    //     ["normal","normal","normal","normal","normal","normal","normal","normal","normal",],
-    //     ["","","","","","","","","normal",]
-    // ],
+    [
+        ["","","","","speed_range","speed_range"],
+        ["speed_range","","","speed_range","speed_range","",""]
+    ],
+    [
+        ["reverse","normal","normal",],
+        ["reverse","normal","normal",]
+    ],
+    [
+        ["normal","tank","normal","normal",],
+        ["normal","tank","normal","normal",]
+    ],
+    [
+        ["normal","normal","normal","normal","normal","normal","normal","normal","normal","",],
+        ["","","","","","","","","","speed_range",]
+    ],
 ];
 
 class entite{
     constructor(x,y, option){
-        this.stun = 0;
+        this.time = 0
+        this.stun = 0
         this.alive = true
+        this.baseHeight = canvasInfo.baseLine
         this.x = x
         this.y = y
-        for(var k in option) this[k] = option[k];
-        this.constructorplus(x,y,option);
+        for(var k in option) this[k] = option[k]
+        this.constructorplus(x,y,option)
     }
     constructorplus(x,y, option){}
     drawself(){
         fill(this.color)
-        rect(this.x - this.getWidth()/2, canvasInfo.baseLine - this.getHeight(), this.getWidth(), this.getHeight());
+        rect(this.x - this.getWidth()/2, this.baseHeight - this.getHeight(), this.getWidth(), this.getHeight());
     }
     draw(){
         this.drawself()
@@ -268,6 +261,9 @@ class entite{
     update(){}
     getWidth(){
         return this.width * canvasInfo.tileSize
+    }
+    getWidthPos(){
+        return this.getWidth()
     }
     getHeight(){
         return this.height * canvasInfo.tileSize
@@ -359,9 +355,10 @@ class enemy extends entite{
     }
     getSpeed(){
         let speed = this.speed;
-        // if(this.before && this.before.getSpeed() < this.speed){
-        //     speed = this.before.getSpeed()
-        // }
+        if(this.speedByTime){
+            speed = speed * (1 + (this.time%20)/20);
+            this.time++;
+        }
         if(this.before){
             // console.log({this:this.x + this.getWidth() / 2 + canvasInfo.paddingEntitiesEnemies * canvasInfo.tileSize,before:this.before.x - this.before.getWidth() / 2});
             if(this.whatDirection()=='left' && this.x + this.getWidth() / 2 + canvasInfo.paddingEntitiesEnemies * canvasInfo.tileSize >= this.before.x - this.before.getWidth() / 2){
@@ -414,7 +411,7 @@ class enemy extends entite{
         let width = 20;
         var y = canvasInfo.baseLine + 15
         for(let i = 1; i <= this.health; i++){
-            y+=2+height
+            y+= 2 + height
             if(this.whatDirection()=='left') canvasInfo.color.left(true)
             else canvasInfo.color.right(true);
             rect(this.x - width/2, y, width, height)
@@ -517,29 +514,33 @@ function spawn(){
     var left = 0;
     var right = canvasInfo.width;
     let random = canvasInfo.lastPattern
-    while(random == canvasInfo.lastPattern && patternEnnemie.length>1 || random<0){
+    while(random == canvasInfo.lastPattern && patternEnnemie.length>1 || random<0){ // not 2 times the same pattern or 1 patern availlable (test)
         random = (Math.random() * patternEnnemie.length);
         random-=random%1;
     }
     canvasInfo.lastPattern = random;
-    console.log("Pattern : " + random);
     let dir = Math.random() < 0.5 ? "left" : "right";
     for(let i = 0; i < patternEnnemie[random][0].length; i++){
         for(let j = 0;j <= 1;j++){
             let x = dir == "left" && j==0 || dir == "right" && j==1 ? left : right
+            let maxDist = 0
             if(patternEnnemie[random][j][i] !== ""){
                 let enemi = new enemy(x,canvasInfo.baseLine,typeEnnemie[patternEnnemie[random][j][i]]);
                 if(dir == "left" && j==0 || dir == "right" && j==1){
                     if(leftEnemies.length>0)
                         enemi.before = leftEnemies[leftEnemies.length-1];
                     leftEnemies.push(enemi);
-                    left-= leftEnemies[leftEnemies.length-1].getWidth();
+                    left-= leftEnemies[leftEnemies.length-1].getWidthPos();
+                    if(maxDist != 0) left-= maxDist
+                    if(maxDist > left) maxDist = -left
                 }
                 else{
                     if(rightEnemies.length>0)
                         enemi.before = rightEnemies[rightEnemies.length-1];
                     rightEnemies.push(enemi);
-                    right+= rightEnemies[rightEnemies.length-1].getWidth();
+                    right+= rightEnemies[rightEnemies.length-1].getWidthPos();
+                    if(maxDist != 0) right= maxDist
+                    if(maxDist > left) maxDist = right
                 }
             }
         }
