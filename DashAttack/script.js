@@ -91,7 +91,7 @@ function draw() {
     heroes.draw()
 
     if(!canvasInfo.pause) canvasInfo.time++
-    showMeFPS()
+    // showMeFPS()
 }
 
 function startNewGame(){
