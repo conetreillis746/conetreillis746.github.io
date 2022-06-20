@@ -1,56 +1,57 @@
 function insideCircle(x, y, cx, cy, r) {
-    return sq(x - cx) + sq(y - cy) < sq(r);
+    return sq(x - cx) + sq(y - cy) < sq(r)
 }
 
 function getInRange(cx, cy, radius, entities) {
-    var results = [];
+    var results = []
     for (var i = 0; i < entities.length; i++) {
-        var e = entities[i];
+        var e = entities[i]
         if (insideCircle(e.x, e.y, cx, cy, radius + 1 + e.getWidth() / 2)) {
-            results.push(e);
+            results.push(e)
         }
     }
-    return results;
+    return results
 }
 
 function getNearest(entities, pos, ignore) {
-    var lowestDist = 10000;
-    var chosen = entities[0];
+    var lowestDist = 10000
+    var chosen = entities[0]
     for (var i = 0; i < entities.length; i++) {
-        var e = entities[i];
-        if (typeof ignore !== 'undefined' && ignore.includes(e)) continue;
+        var e = entities[i]
+        if (typeof ignore !== 'undefined' && ignore.includes(e)) continue
         var epos = createVector(e.x,e.y)
-        var dist = pos.dist(epos);
+        var dist = pos.dist(epos)
         if (dist < lowestDist) {
-            lowestDist = dist;
-            chosen = e;
+            lowestDist = dist
+            chosen = e
         }
     }
-    return chosen;
+    return chosen
 }
 
 // Control
 function logKey(e){
     switch(e.keyCode){
         case 32:
-            canvasInfo.pause = !canvasInfo.pause;
-        break;
+            canvasInfo.pause = !canvasInfo.pause
+        break
         // How to trigger Dash
         case 37:
-            heroes.leftDash();
-        break;
+            heroes.leftDash()
+        break
         case 39:
-            heroes.rightDash();
-        break;
+            heroes.rightDash()
+        break
     }
 }
-function mouseClicked(event) { // leftClick
-    heroes.leftDash();
+// function mouseClicked(event) { // leftClick
+//     heroes.leftDash()
+// }
+function LeftClicked(event) { // leftClick
+    heroes.leftDash()
 }
 function RightClicked(event){
-    heroes.rightDash();
-    event.preventDefault();
-    return false;
+    heroes.rightDash()
 }
 
 class Popup{
@@ -84,23 +85,29 @@ class Popup{
     }
 
     showPopup(){
-        this.div.popupContainer.style.visibility = "visible";
-        this.div.popupContainer.style.opacity = "1";
+        this.div.popupContainer.style.visibility = "visible"
+        this.div.popupContainer.style.opacity = "1"
     }
 
     hidePopup() {
-        this.div.popupContainer.style.visibility = "hidden";
-        this.div.popupContainer.style.opacity = "0";
+        this.div.popupContainer.style.visibility = "hidden"
+        this.div.popupContainer.style.opacity = "0"
     }
 }
 
 let popup = new Popup()
 
-var listImage = {};
+var listImage = {}
 function preload() {
-    listImage.keyboard = loadImage('assets/keyboard_icon_selection.jpg');
-    listImage.mouseleft = loadImage('assets/mouse-left-button-svgrepo-com.svg');
-    listImage.mouseright = loadImage('assets/mouse-right-button-svgrepo-com.svg');
+    // control
+    listImage.keyboard = loadImage('assets/keyboard_icon_selection.png')
+    listImage.mouseleft = loadImage('assets/mouse-left-button-svgrepo-com.svg')
+    listImage.mouseright = loadImage('assets/mouse-right-button-svgrepo-com.svg')
+
+    listImage.background = loadImage('assets/background.jpg')
+
+    // enemi
+    listImage.cloud = loadImage('assets/cloud.png')
 }
 
 var timestamp = null
@@ -115,8 +122,8 @@ function showControl(){
     if(timestamp % (3600*2) / 3600 <= 1){
         leftIcon = listImage.keyboard.get(4,97,89,89)
         rightIcon = listImage.keyboard.get(194,97,89,89)
-        leftIcon.filter(INVERT);
-        rightIcon.filter(INVERT);
+        leftIcon.filter(INVERT)
+        rightIcon.filter(INVERT)
         leftIcon.height *= 2
         leftIcon.width *= 2
         rightIcon.height *= 2
@@ -125,10 +132,10 @@ function showControl(){
         leftIcon = listImage.mouseleft
         rightIcon = listImage.mouseright
     }
-    tint(opacity)
+    tint(255,opacity)
     leftIcon.loadPixels()
     image(leftIcon,50,50,leftIcon.width / 2,leftIcon.height / 2)
-    tint(opacity)
+    tint(255,opacity)
     rightIcon.loadPixels()
     image(rightIcon,canvasInfo.width - rightIcon.width / 2 - 50,50,rightIcon.width / 2,rightIcon.height / 2)
 }
