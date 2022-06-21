@@ -31,7 +31,6 @@ class enemy extends entite{
     }
     update(){
         this.time++
-        this.showHealtBar()
         if(this.before && false){
             // distance from me and ennemi before if exist
             fill(255)

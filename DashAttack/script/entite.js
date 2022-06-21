@@ -13,7 +13,9 @@ class entite{
     drawself(){
         fill(this.color)
         rect(this.x - this.getWidth()/2, this.baseHeight - this.getHeight(), this.getWidth(), this.getHeight());
+        this.showHealtBar()
     }
+    showHealtBar(){}
     draw(){
         this.drawself()
         this.update();

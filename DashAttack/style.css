@@ -68,6 +68,13 @@
     color: #fff;
     background-color: #e74c3c;
 }
+
+#buttonRetry{
+    color: #fff;
+    background-color: #918d8d;
+    padding: 0.5em 2em;
+    border-radius: 5px;
+}
 /** END popup style */
 
 *{

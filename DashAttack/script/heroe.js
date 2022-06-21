@@ -12,12 +12,16 @@ const defaultHero = {
         right: false
     },
     maxSpeed: 20,
-    speed: 0.2
+    speed: 0.2,
+    comboTime:0,
 }
 
 class heroe extends entite{
     showCombo(){
-        textSize(32)
+        if(this.comboTime > 0) this.comboTime--
+        else return;
+        let size = 30 * (this.comboTime / 40) + 12
+        textSize(size)
         fill(255)
         stroke(0)
         text("+ " + this.combo, this.x - this.getWidth() * (this.combo<10?0.66:0.5), (this.baseHeight - this.height * canvasInfo.tileSize) / 2)
@@ -25,6 +29,7 @@ class heroe extends entite{
     isCombo(isKilled, enemi){
         canvasInfo.points+= (1) + this.combo
         if(isKilled && enemi.maxHealth>1){
+            this.comboTime = 60
             this.combo+= 1 + enemi.bonusPoint()
         }else{
             this.combo = 0

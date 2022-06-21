@@ -108,6 +108,7 @@ function preload() {
 
     // enemi
     listImage.cloud = loadImage('assets/cloud.png')
+    listImage.storm = loadImage('assets/storm.png')
 }
 
 var timestamp = null

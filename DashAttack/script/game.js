@@ -16,7 +16,7 @@ var canvasInfo = {
     paddingEntitiesEnemies: 3,
     endGame: function(){
         canvasInfo.pause = true
-        canvasInfo.showProgress('Votre Score')
+        canvasInfo.showProgress('Your score')
     },
     showProgress(titre){
         popup.setTitle(titre)
@@ -24,6 +24,7 @@ var canvasInfo = {
         let tab = [
             ['Points', {style:'font-size:2em', html: canvasInfo.points}],
             ['Kill', {style:'font-size:2em', html: canvasInfo.kill}],
+            ['Wave', {style:'font-size:2em', html: canvasInfo.wave}],
             ['Time', {style:'font-size:2em', html: getTimer(canvasInfo.time)}]
         ]
 
@@ -38,7 +39,7 @@ var canvasInfo = {
             })
         })
 
-        let element = '<div style="text-align: center;width:100%"><table style="width:100%"><tr>'+tr[0]+'</tr><tr>'+tr[1]+'</tr></table><button id="buttonRetry">Reessayer</button></div>'
+        let element = '<div style="text-align: center;width:100%"><table style="width:100%"><tr>'+tr[0]+'</tr><tr>'+tr[1]+'</tr></table><button id="buttonRetry">Retry</button></div>'
         
         let contenu = document.createElement('div')
 
@@ -61,6 +62,7 @@ var canvasInfo = {
     time: 0,
     kill: 0,
     points: 0,
+    wave: 0,
     pause: true,
     reset: function(){
         // reset game
@@ -75,7 +77,7 @@ var canvasInfo = {
     },
     lastPattern: -1,
 }
-canvasInfo.baseLine = canvasInfo.height - 57
+canvasInfo.baseLine = canvasInfo.height - 55
 
 var typeEnnemie = {
     "normal": {
@@ -263,8 +265,9 @@ var projectiles = {
         width: 5,
         height: 2,
         charge:0,
-        range: 1,
+        range: 3 * canvasInfo.tileSize,
         maxCharge: 120,
+        maxTime: 8,
         chargeColor: ['#9999ff','#6666ff','#4d4dff'],
         color: '#9999ff',
         drawself(){
@@ -282,18 +285,21 @@ var projectiles = {
             if(this.charge>=this.maxCharge){
                 this.fire()
             }
-            if(this.charge - this.maxCharge - 5 >= 0) {
+            if(this.charge - this.maxCharge - (4 * this.maxTime / 4) >= 0) {
                 this.alive = false
                 this.charge = 0
             }
         },
         fire(){
             fill("#0000FF")
-            let width = 5 * canvasInfo.tileSize
-            let height = canvasInfo.baseLine - this.y
-            rect(this.x - width/2, this.baseHeight - height, width, height)
-            
-            if(heroes.x > this.x - this.range / 2 && heroes.x < this.x + this.range / 2){
+            let width = listImage.storm.width / 4 - 3 // - 3 to not move the animation of storm
+            let height = listImage.storm.height
+            let frame = (this.charge - this.maxCharge)
+            frame = (frame - frame%(this.maxTime / 4)) / (this.maxTime / 4)
+
+            copy(listImage.storm, width * frame, 0, width, height, this.x - width / 2, 200, width , height)
+
+            if(frame > 2 && heroes.x > this.x - this.range / 2 && heroes.x < this.x + this.range / 2){
                 canvasInfo.endGame()
             }
         },

@@ -5,7 +5,10 @@
         <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
         <script src='https://code.jquery.com/jquery-3.6.0.min.js'></script>
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <style>
+        <style>
+            body{
+                background: black;
+            }
             @media (max-width: 480px) {
                 body{
                     font-size:10px;
@@ -85,35 +88,43 @@
                 animation-name: colorUnselected;
             }
 
-            #content { flex-grow: 1; border: none; margin: 0; padding: 0; }
+            #content {
+                flex-grow: 1;
+                border: none;
+                margin: 0;
+                padding: 0;
+                width: 100vw;
+                height: 100vh;
+            }
         </style>
         <script>
             $(document).ready(function(){
                 $('.icon_to_select').click(function(){
                     url = $(this).attr('url');
-                    window.location.href = url;
-                    // document.getElementById('content').src = url;
-                    // $('.selected').addClass('unselected').removeClass('selected');
-                    // $(this).removeClass('unselected').addClass('selected');
+                    // window.location.href = url;
+                    document.getElementById('content').src = url;
+                    $('.selected').addClass('unselected').removeClass('selected');
+                    $(this).removeClass('unselected').addClass('selected');
+                    $('#content').focus()
                 });
             });
         </script>
     </head>
         <body style='margin:0;display:flex'>
         <div id='menu'>
-            <div class='icon_to_select selected' url='' title=''>
+            <!-- <div class='icon_to_select selected' url='' title=''>
                 <div class='get_icon'>
                     <div class='icon_background'></div>
                 </div>
                 <span class="icon_center material-icons material-icons-outlined">home</span>
-            </div>
-            <div class='icon_to_select ' url='./Demineur/index.html' title='Demineur'>
+            </div> -->
+            <div class='icon_to_select' url='./Demineur/index.html' title='Demineur'>
                 <div class='get_icon'>
                     <div class='icon_background'></div>
                 </div>
                 <span class="icon_center material-icons material-icons-outlined">do_not_disturb_on</span>
             </div>
-            <div class='icon_to_select ' url='./DashAttack/index.html' title='DashAttack'>
+            <div class='icon_to_select selected' url='./DashAttack/index.html' title='DashAttack'>
                 <div class='get_icon'>
                     <div class='icon_background'></div>
                 </div>
@@ -126,7 +137,7 @@
                 <span class="icon_center material-icons material-icons-outlined">cell_tower</span>
             </div>
         </div>
-        <iframe id='content'>
+        <iframe id='content' src="./DashAttack/index.html">
         </iframe>
     </body>
 </html>
