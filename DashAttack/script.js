@@ -111,7 +111,18 @@ function draw() {
     })
 
     if(!canvasInfo.pause) canvasInfo.time++
-    // showMeFPS()
+    showMeFPS()
+    test()
+}
+
+function test(){
+    // width = 5
+    // rect(heroes.x , heroes.y , width, width)
+    // if(entitiesPlus.length>0){
+    //     triangle(heroes.x, heroes.y, entitiesPlus[0].x, entitiesPlus[0].y, entitiesPlus[0].x , heroes.y)
+    //     rect(entitiesPlus[0].x , entitiesPlus[0].y , width, width)
+    //     rect(entitiesPlus[0].x , heroes.y , width, width)
+    // }
 }
 
 function startNewGame(){
@@ -125,7 +136,7 @@ function startNewGame(){
 
 function getTypeEnnemie(libelle){
     var moreAttribute = {
-        health:0,
+        health: 0,
         multhealth: 1,
     }
     while(libelle.indexOf('+') >= 0){
@@ -145,7 +156,7 @@ function getTypeEnnemie(libelle){
 // create ennemy
 function spawn(){
     canvasInfo.wave++
-    canvasInfo.acceleration+=0.1
+    canvasInfo.acceleration*=1.01
     var left = 0
     var right = canvasInfo.width
     let random = canvasInfo.lastPattern

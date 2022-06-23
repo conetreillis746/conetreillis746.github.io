@@ -2,9 +2,9 @@ const defaultHero = {
     combo: 0,
     actif: false,
     range: 6 * canvasInfo.tileSize,
-    rangeDash: 15,
-    width: 3,
-    height: 10,
+    rangeDash: 1.5 * canvasInfo.tileSize,
+    width: 2.5,
+    height: 8,
     dashAttack: false,
     color:255,
     detect: {
@@ -106,5 +106,11 @@ class heroe extends entite{
         var list = getInRange(this.x,this.y,this.getRange(),leftEnemies)
         if(list.length > 0)
             this.detect.left = true
+
+        // push()
+        // fill('#FF0000')
+        // let width = 10
+        // rect(heroes.x - width/2, heroes.y - width/2, width ,width)
+        // pop()
     }
 }

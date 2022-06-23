@@ -30,4 +30,7 @@ class entite{
     getHeight(){
         return this.height * canvasInfo.tileSize
     }
+    whatDirection(){
+        return (this.x < heroes.x?"left":"right")
+    }
 }

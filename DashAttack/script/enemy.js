@@ -2,9 +2,6 @@ class enemy extends entite{
     constructorplus(x,y, option){
         this.maxHealth = this.health
     }
-    whatDirection(){
-        return (this.x < heroes.x?"left":"right")
-    }
     bonusPoint(){
         return 0
     }
@@ -17,13 +14,18 @@ class enemy extends entite{
             this.time++
         }
         if(this.before){
-            if(this.whatDirection()=='left' && this.x + this.getWidth() / 2 + canvasInfo.paddingEntitiesEnemies * canvasInfo.tileSize >= this.before.x - this.before.getWidth() / 2){
-                speed = 0
-                this.x = this.before.x - this.before.getWidth() / 2 - (this.getWidth() / 2 + canvasInfo.paddingEntitiesEnemies * canvasInfo.tileSize)
+            let distance = this.getWidth() / 2 + canvasInfo.paddingEntitiesEnemies * canvasInfo.tileSize
+            if(this.whatDirection()=='left'){
+                if(this.x + distance >= this.before.x - this.before.getWidth() / 2){
+                    speed = 0
+                    this.x = this.before.x - this.before.getWidth() / 2 - distance
+                }
             }
-            if(this.whatDirection()=='right' && this.x - this.getWidth() / 2 - canvasInfo.paddingEntitiesEnemies * canvasInfo.tileSize <= this.before.x + this.before.getWidth() / 2){
-                speed = 0
-                this.x = this.before.x + this.before.getWidth() / 2 + (this.getWidth() / 2 + canvasInfo.paddingEntitiesEnemies * canvasInfo.tileSize)
+            if(this.whatDirection()=='right'){
+                if(this.x - distance <= this.before.x + this.before.getWidth() / 2){
+                    speed = 0
+                    this.x = this.before.x + this.before.getWidth() / 2 + distance
+                }
             }
         }
         // take the speed of the more slow closer to the hero
