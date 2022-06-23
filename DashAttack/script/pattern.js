@@ -227,7 +227,7 @@ var patternEnnemie = [
 var projectiles = {
     "storm" : {
         y: canvasInfo.baseLine + 20 * canvasInfo.tileSize,
-        baseHeight: canvasInfo.baseLine - 20 * canvasInfo.tileSize,
+        baseHeight: canvasInfo.baseLine - 15 * canvasInfo.tileSize,
         width: 5,
         height: 2,
         charge:0,
