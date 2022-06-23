@@ -111,7 +111,7 @@ function draw() {
     })
 
     if(!canvasInfo.pause) canvasInfo.time++
-    showMeFPS()
+    // showMeFPS()
     test()
 }
 
