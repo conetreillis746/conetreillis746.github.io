@@ -22,6 +22,7 @@ function setup() {
     // controller heroe
     if(isMobile){
         function logInfo(e){
+             // event on touch
             if(e.changedTouches[0].clientX - e.target.offsetLeft < 0){
                 LeftClicked()
             }else{
@@ -35,6 +36,7 @@ function setup() {
         // log('Initialisation.');
     }else{
         document.addEventListener('mousedown', function(e){
+             // event on press
             if(e.buttons==1){
                 LeftClicked()
             }
@@ -42,12 +44,12 @@ function setup() {
                 RightClicked()
             }
         })
-        document.addEventListener('contextmenu', function(e){
-            e.preventDefault()
-            return false
-        })
         document.onkeydown = logKey
     }
+    document.addEventListener('contextmenu', function(e){
+        e.preventDefault()
+        return false
+    })
 
     mapInfo.map = listImage.background.get()
     mapInfo.map.resize(canvasInfo.width, canvasInfo.height)
@@ -63,17 +65,34 @@ function showMeFPS(){
         return prev + curr
     }) / tab_fps.length
     
-    textSize(12)
+    textSize(10)
     fill(255)
     stroke(0)
-    text("FPS: " + fps.toFixed(0), 10, 30)
-    text("avg FPS: " + total_fps.toFixed(0), 10, 15)
+    text("FPS: " + fps.toFixed(0) + " (~" + total_fps.toFixed(0) + ")", 10, 15)
 }
 
-// each time
-function draw() {
-    clear() // clear the canvas
+const listImgPlus = {
+    "phare": { ratio: 0.33 }
+}
+
+function showMap(){
     tint(255)
+
+    push()
+    fill("#6096ff")
+    rect(0,0,canvasInfo.width,canvasInfo.height)
+    pop()
+    for (const [index, img] of Object.entries(listImgPlus)) {
+        if(img.x == undefined){
+            img.x = 
+            img.y = canvasInfo.height - listImage[index].height
+        }
+        let mapx = img.x
+        let diffMapx = canvasInfo.width - mapx
+        copy(listImage[index], diffMapx, 0, mapx, listImage[index].height, 0, img.y, mapx, listImage[index].height)
+        copy(listImage[index], 0, 0, diffMapx, listImage[index].height, mapx, img.y, diffMapx, listImage[index].height)
+    }
+
     mapInfo.x = (mapInfo.x + canvasInfo.width) % canvasInfo.width
     let mapx = mapInfo.x
     let diffMapx = canvasInfo.width - mapx
@@ -81,6 +100,18 @@ function draw() {
     // use only usefull image => use less ressources : more fps (than use fn image)
     copy(mapInfo.map, diffMapx, 0, mapx, mapInfo.map.height, 0, 0, mapx, canvasInfo.height)
     copy(mapInfo.map, 0, 0, diffMapx, mapInfo.map.height, mapx, 0, diffMapx, canvasInfo.height)
+}
+
+// each time
+function draw() {
+    timestamp = new Date().getTime()
+    clear() // clear the canvas
+
+    showMap()
+
+    if(canvasInfo.wave <= 2){
+        showControl(leftEnemies.length > 0 ? "left" : "right")
+    }
 
     if(canvasInfo.time ==0){ // game doesn't start
         showControl()
@@ -94,7 +125,6 @@ function draw() {
     // rect(0, canvasInfo.baseLine, canvasInfo.width, 2)
 
     // game updater
-
     rightEnemies.forEach(function(enemi){
         if(!canvasInfo.pause)enemi.update()
         enemi.draw()
@@ -109,6 +139,17 @@ function draw() {
         enemi.draw()
         if(!enemi.alive) entitiesPlus.splice(index,1)
     })
+
+    if(canvasInfo.newWave + 1500 > timestamp){
+        let opacity = (timestamp - canvasInfo.newWave) / 1500 * 255
+        let size = 30
+        push()
+        textSize(size)
+        fill(255, 300 - opacity)
+        let txt = "Wave " + canvasInfo.wave;
+        text("Wave " + canvasInfo.wave, heroes.x - (txt.length * size / 4), canvasInfo.height - heroes.y)
+        pop()
+    }
 
     if(!canvasInfo.pause) canvasInfo.time++
     // showMeFPS()
@@ -130,7 +171,7 @@ function startNewGame(){
     canvasInfo.ready = false
     heroes.actif = true
     canvasInfo.pause = false
-    canvasInfo.acceleration = canvasInfo.baseAcceleration
+    canvasInfo.acceleration = canvasInfo.baseAcceleration * canvasInfo.ratio
     spawn()
 }
 
@@ -157,15 +198,35 @@ function getTypeEnnemie(libelle){
 function spawn(){
     canvasInfo.wave++
     canvasInfo.acceleration*=1.01
+
+    canvasInfo.newWave = timestamp
+
     var left = 0
     var right = canvasInfo.width
     let random = canvasInfo.lastPattern
+
     while(random == canvasInfo.lastPattern && patternEnnemie.length>1 || random<0){ // not 2 times the same pattern or 1 patern availlable (test)
         random = (Math.random() * patternEnnemie.length)
         random-=random%1
     }
-    canvasInfo.lastPattern = random
+
     let dir = Math.random() < 0.5 ? "left" : "right"
+    if(canvasInfo.wave <= 3 && patternEnnemie.length>1){
+        switch(canvasInfo.wave){
+            case 1:
+                random = 0
+                dir = "left"
+                break;
+            case 2:
+                random = 0
+                dir = "right"
+                break;
+            case 3:
+                random = 1
+                break;
+        }
+    }
+    canvasInfo.lastPattern = random
     var tab
     for(let i = 0; i < patternEnnemie[random][0].length; i++){
         for(let j = 0;j <= 1;j++){
@@ -192,8 +253,8 @@ function spawn(){
                 }
             }
         }
-        left-= canvasInfo.paddingEntitiesEnemies * canvasInfo.tileSize
-        right+= canvasInfo.paddingEntitiesEnemies * canvasInfo.tileSize
+        left-= canvasInfo.paddingEntitiesEnemies
+        right+= canvasInfo.paddingEntitiesEnemies
 
         tab = [
             left * -1,
@@ -205,15 +266,30 @@ function spawn(){
 }
 
 // move entites except heroe to 
-function moveAll(move){
-    for (var i = 0; i < rightEnemies.length; i++) {
-        rightEnemies[i].x+=move
+function moveAll(move, onlyOneDirection){
+    if(onlyOneDirection != undefined){
+        if(onlyOneDirection == "right"){
+            for (var i = 0; i < rightEnemies.length; i++) {
+                rightEnemies[i].x+= move
+            }
+        }else{
+            for (var i = 0; i < leftEnemies.length; i++) {
+                leftEnemies[i].x-= move
+            }
+        }
+    }else{
+        for (var i = 0; i < rightEnemies.length; i++) {
+            rightEnemies[i].x+= move
+        }
+        for (var i = 0; i < leftEnemies.length; i++) {
+            leftEnemies[i].x+= move
+        }
+        for (var i = 0; i < entitiesPlus.length; i++) {
+            entitiesPlus[i].x+= move
+        }
+        mapInfo.x+= move
+        for (const [index, img] of Object.entries(listImgPlus)) {
+            img.x+= move / 2
+        }
     }
-    for (var i = 0; i < leftEnemies.length; i++) {
-        leftEnemies[i].x+=move
-    }
-    for (var i = 0; i < entitiesPlus.length; i++) {
-        entitiesPlus[i].x+=move
-    }
-    mapInfo.x+=move
 }

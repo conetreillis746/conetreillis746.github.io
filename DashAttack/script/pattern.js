@@ -19,6 +19,9 @@ var typeEnnemie = {
                 let tmp = leftEnemies.shift()
                 if(leftEnemies.length>0)
                     leftEnemies[0].before = null
+                if(heroes.detect().right){
+                    moveAll(canvasInfo.paddingEntitiesEnemies,"right")
+                }
                 rightEnemies.unshift(tmp)
                 if(rightEnemies.length>1)
                     rightEnemies[1].before = tmp
@@ -26,6 +29,9 @@ var typeEnnemie = {
                 let tmp = rightEnemies.shift()
                 if(rightEnemies.length>0)
                     rightEnemies[0].before = null
+                if(heroes.detect().left){
+                    moveAll(canvasInfo.paddingEntitiesEnemies,"left")
+                }
                 leftEnemies.unshift(tmp)
                 if(leftEnemies.length>1)
                     leftEnemies[1].before = tmp
@@ -36,6 +42,7 @@ var typeEnnemie = {
             if(tmp < heroes.range && leftDirect)
                 tmp = heroes.range
             this.x = tmp + heroes.x
+
             this.stun = 80
             this.health--
             if(this.health <= 0)
@@ -43,12 +50,12 @@ var typeEnnemie = {
             return this.alive
         },
         showHealtBar(){
-            let height = 5
-            let width = 20
-            var y = canvasInfo.baseLine + 15
+            let height = 5 * canvasInfo.ratio
+            let width = 20 * canvasInfo.ratio
+            var y = canvasInfo.baseLine + 15 * canvasInfo.ratio
             let directionLeft = this.whatDirection()=='left'
             for(let i = 1; i <= this.health; i++){
-                y+=2+height
+                y+= 2 * canvasInfo.ratio + height
                 if(directionLeft) canvasInfo.color.left(true)
                 else canvasInfo.color.right(true)
                 rect(this.x - width/2, y, width, height)
@@ -72,13 +79,13 @@ var typeEnnemie = {
             }
             
             if(this.before){
-                if(this.whatDirection()=='left' && this.x + this.getWidth() / 2 + canvasInfo.paddingEntitiesEnemies * canvasInfo.tileSize >= this.before.x - this.before.getWidth() / 2){
+                if(this.whatDirection()=='left' && this.x + this.getWidth() / 2 + canvasInfo.paddingEntitiesEnemies >= this.before.x - this.before.getWidth() / 2){
                     speed = 0
-                    this.x = this.before.x - this.before.getWidth() / 2 - (this.getWidth() / 2 + canvasInfo.paddingEntitiesEnemies * canvasInfo.tileSize)
+                    this.x = this.before.x - this.before.getWidth() / 2 - (this.getWidth() / 2 + canvasInfo.paddingEntitiesEnemies)
                 }
-                if(this.whatDirection()=='right' && this.x - this.getWidth() / 2 - canvasInfo.paddingEntitiesEnemies * canvasInfo.tileSize <= this.before.x + this.before.getWidth() / 2){
+                if(this.whatDirection()=='right' && this.x - this.getWidth() / 2 - canvasInfo.paddingEntitiesEnemies <= this.before.x + this.before.getWidth() / 2){
                     speed = 0
-                    this.x = this.before.x + this.before.getWidth() / 2 + (this.getWidth() / 2 + canvasInfo.paddingEntitiesEnemies * canvasInfo.tileSize)
+                    this.x = this.before.x + this.before.getWidth() / 2 + (this.getWidth() / 2 + canvasInfo.paddingEntitiesEnemies)
                 }
             }
             // take the speed of the more slow
@@ -144,21 +151,22 @@ var typeEnnemie = {
         health: 1,
         speed: 2,
         width: 2,
-        range: defaultHero.range + 5,
+        range: defaultHero.range * 4,
         height: 8,
         color: "#66b3ff",
-        beforeCast: 200,
+        beforeCast: 150,
         needCast: 50,
-        cast: false,
+        cast: true,
         stopAtRange: true,
         lastPosX: 0,
-        time: 150,
+        time: 0,
         draw(){
-            let range = this.getWidth() / 2 + this.range * canvasInfo.tileSize
-            if(this.whatDirection()=='left' && this.x + range < heroes.x - heroes.getWidth() / 2){
+            let range = this.range + heroes.getWidth() / 2
+            // rect(this.x,this.y - 2, range * (this.whatDirection()=='left' ? 1 : -1), 2)
+            if(this.whatDirection()=='left' && !(this.x + range > heroes.x)){
                 this.time = 0 
             }
-            if(this.whatDirection()=='right' && this.x - range > heroes.x + heroes.getWidth() / 2){
+            if(this.whatDirection()=='right' && !(this.x - range < heroes.x)){
                 this.time = 0 
             }
             this.drawself()
@@ -178,6 +186,14 @@ var typeEnnemie = {
 
 var patternEnnemie = [
     /* array of array for two direction */
+    [
+        ["tank","normal","normal","normal",],
+        ["","","","",]
+    ],
+    [
+        ["tank++","sword_thrower","sword_thrower","sword_thrower",],
+        ["tank++","sword_thrower","sword_thrower","sword_thrower",]
+    ],
     [
         ["tank","normal","normal","normal",],
         ["tank","normal","normal","normal",]
@@ -219,9 +235,9 @@ var patternEnnemie = [
 // test
 // patternEnnemie = [
 //     [
-//         ["tank***++","sword_thrower",],
-//         ["tank***++","sword_thrower",]
-//     ]
+//         ["tank++","sword_thrower","sword_thrower","sword_thrower",],
+//         ["tank++","sword_thrower","sword_thrower","sword_thrower",]
+//     ],
 // ]
 
 var projectiles = {
@@ -238,7 +254,7 @@ var projectiles = {
         color: '#9999ff',
         drawself(){
             let cloud = listImage.cloud.get()
-            cloud.resize(25 * 3,12 * 3)
+            cloud.resize(25 * 3 * canvasInfo.ratio,12 * 3 * canvasInfo.ratio)
             image(cloud, this.x - cloud.width / 2, this.baseHeight - this.getHeight())
         },
         draw(){
@@ -263,7 +279,7 @@ var projectiles = {
             let frame = (this.charge - this.maxCharge)
             frame = (frame - frame%(this.maxTime / 4)) / (this.maxTime / 4)
 
-            copy(listImage.storm, width * frame, 0, width, height, this.x - width / 2, 200, width , height)
+            copy(listImage.storm, width * frame, 0, width, height, this.x - width / 2, 200 * canvasInfo.ratio, width , height)
 
             if(frame > 2 && heroes.x > this.x - this.range / 2 && heroes.x < this.x + this.range / 2){
                 canvasInfo.endGame()
@@ -281,7 +297,7 @@ var projectiles = {
         stage: 0,
         rotate: 0,
         speed: 0,
-        maxSpeed: 2,
+        maxSpeed: 3,
         tab_length: null, // length of right triangle
         tab_angle: null, // rad angle of right triangle
         baseDirection: null,
@@ -329,20 +345,22 @@ var projectiles = {
             return angle ? Math.PI / 2 + (this.baseDirection == "left" ? - this.tab_angle['C'] : + this.tab_angle['C']) : this.tab_length['a']
         },
         update(){
-            if(this.stage == 0){
-                this.puissance = (this.y - this.maxY + canvasInfo.tileSize) / canvasInfo.tileSize
+            if(this.stage == 0){ // launch
+                this.puissance = (this.y - this.maxY + canvasInfo.tileSize) / canvasInfo.tileSize * 2
                 let speed = this.maxSpeed * this.puissance * -1
                 this.rotate+=  (this.baseDirection == "left" ? 1 / this.puissance : -1 / this.puissance)
-                this.y += speed / 10 * canvasInfo.acceleration;
-                this.x += (heroes.x - this.x) * 0.02
+                this.y += speed / 10 * canvasInfo.acceleration
+                this.x += (heroes.x - this.x) * 0.05 * canvasInfo.acceleration
                 if(this.y - 2 * canvasInfo.tileSize <= this.maxY) this.stage = 1
             }
-            if(this.stage == 1 || this.stage == 2){
+            if(this.stage == 1 || this.stage == 2){ // 
                 this.puissance-= this.puissance * 0.1;
                 if(this.stage == 1 && this.puissance < 0.5){
                     this.stage = 2
+                    this.baseDirection = this.whatDirection()
                     this.maxrotate = this.orientationToTheHeroe(true)
                     this.rotate = this.rotate % (Math.PI * 2)
+                    if(this.rotate > this.maxrotate) this.rotate - (Math.PI * 2)
                 }
                 if(this.stage == 2){
                     // this.rotate = this.maxrotate

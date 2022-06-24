@@ -14,7 +14,7 @@ class enemy extends entite{
             this.time++
         }
         if(this.before){
-            let distance = this.getWidth() / 2 + canvasInfo.paddingEntitiesEnemies * canvasInfo.tileSize
+            let distance = this.getWidth() / 2 + canvasInfo.paddingEntitiesEnemies
             if(this.whatDirection()=='left'){
                 if(this.x + distance >= this.before.x - this.before.getWidth() / 2){
                     speed = 0
@@ -36,7 +36,7 @@ class enemy extends entite{
         if(this.before && false){
             // distance from me and ennemi before if exist
             fill(255)
-            rect(this.x < heroes.x? this.x + this.getWidth() / 2 : this.x - this.getWidth() / 2 - 5,this.y,canvasInfo.paddingEntitiesEnemies * canvasInfo.tileSize,5)
+            rect(this.x < heroes.x? this.x + this.getWidth() / 2 : this.x - this.getWidth() / 2 - 5,this.y,canvasInfo.paddingEntitiesEnemies,5)
         }
         if(canvasInfo.pause) return // not update if game is pause
         if(this.stun > 0){
@@ -65,18 +65,15 @@ class enemy extends entite{
         }
     }
     showHealtBar(){
-        let height = 5
-        let width = 20
-        var y = canvasInfo.baseLine + 15
+        let height = 5 * canvasInfo.ratio
+        let width = 20 * canvasInfo.ratio
+        var y = canvasInfo.baseLine + 15 * canvasInfo.ratio 
         for(let i = 1; i <= this.health; i++){
-            y+= 2 + height
+            y+= 2 * canvasInfo.ratio + height
             if(this.whatDirection()=='left') canvasInfo.color.left(true)
             else canvasInfo.color.right(true)
             rect(this.x - width/2, y, width, height)
         }
-    }
-    getWidth(){
-        return this.width * canvasInfo.tileSize
     }
     hit(){
         this.stun += 20

@@ -99,46 +99,59 @@ let popup = new Popup()
 
 var listImage = {}
 function preload() {
-    // control
-    listImage.keyboard = loadImage('assets/keyboard_icon_selection.png')
-    listImage.mouseleft = loadImage('assets/mouse-left-button-svgrepo-com.svg')
-    listImage.mouseright = loadImage('assets/mouse-right-button-svgrepo-com.svg')
+    function resizeImgControl(img, ratio){
+        if(ratio == undefined) ratio = 1
+        img.resize(img.width * canvasInfo.ratio * ratio, img.height * canvasInfo.ratio * ratio)
+    }
 
-    listImage.background = loadImage('assets/background.jpg')
+    // control
+    listImage.keyboard = loadImage('assets/keyboard_icon_selection.png', function(){ // wait img load and do something
+        listImage.leftButton = listImage.keyboard.get(4,97,89,89)
+        listImage.rightButton = listImage.keyboard.get(194,97,89,89)
+        listImage.leftButton.filter(INVERT)
+        listImage.rightButton.filter(INVERT)
+        listImage.leftButton.height *= 3
+        listImage.leftButton.width *= 3
+        listImage.rightButton.height *= 3
+        listImage.rightButton.width *= 3
+        resizeImgControl(listImage.leftButton)
+        resizeImgControl(listImage.rightButton)
+    })
+
+    listImage.mouseleft = loadImage('assets/mouse-left-button-svgrepo-com.svg', resizeImgControl)
+    listImage.mouseright = loadImage('assets/mouse-right-button-svgrepo-com.svg', resizeImgControl)
+
+    listImage.background = loadImage('assets/background.png', resizeImgControl)
+    for (const [index, obj] of Object.entries(listImgPlus)) {
+        listImage[index] = loadImage('assets/'+index+'.png', img => resizeImgControl(img ,obj.ratio))
+    }
 
     // enemi
-    listImage.cloud = loadImage('assets/cloud.png')
-    listImage.storm = loadImage('assets/storm.png')
+    listImage.cloud = loadImage('assets/cloud.png', resizeImgControl)
+    listImage.storm = loadImage('assets/storm.png', resizeImgControl)
 }
 
 var timestamp = null
-function showControl(){
-    timestamp = new Date().getTime()
-    var opacity = (timestamp % 3600) / 3600 * (255 * 2)
+const changeImg = 3600 / 2
+function showControl(direction){
+    var opacity = (timestamp % changeImg) / changeImg * (255 * 2)
     if(opacity > 255) opacity = 255 - opacity % 255
 
-    let leftIcon = listImage.keyboard.get(4,97,89,89)
-    let rightIcon = listImage.keyboard.get(194,97,89,89)
+    var leftIcon = null
+    var rightIcon = null
 
-    if(timestamp % (3600*2) / 3600 <= 1){
-        leftIcon = listImage.keyboard.get(4,97,89,89)
-        rightIcon = listImage.keyboard.get(194,97,89,89)
-        leftIcon.filter(INVERT)
-        rightIcon.filter(INVERT)
-        leftIcon.height *= 2
-        leftIcon.width *= 2
-        rightIcon.height *= 2
-        rightIcon.width *= 2
+    if(timestamp % (changeImg * 2) / changeImg <= 1){
+        leftIcon = listImage.leftButton
+        rightIcon = listImage.rightButton
     }else{
         leftIcon = listImage.mouseleft
         rightIcon = listImage.mouseright
     }
-    tint(255,opacity)
-    leftIcon.loadPixels()
-    image(leftIcon,50,50,leftIcon.width / 2,leftIcon.height / 2)
-    tint(255,opacity)
-    rightIcon.loadPixels()
-    image(rightIcon,canvasInfo.width - rightIcon.width / 2 - 50,50,rightIcon.width / 2,rightIcon.height / 2)
+    let pos = 50 * canvasInfo.ratio
+    tint(255,opacity!=undefined && direction == "right" ? 0 : opacity)
+    image(leftIcon,pos,pos,leftIcon.width / 2 * canvasInfo.ratio,leftIcon.height / 2 * canvasInfo.ratio)
+    tint(255,opacity!=undefined && direction == "left" ? 0 : opacity)
+    image(rightIcon,canvasInfo.width - rightIcon.width / 2 * canvasInfo.ratio - pos, pos, rightIcon.width * canvasInfo.ratio / 2, rightIcon.height / 2 * canvasInfo.ratio)
 }
 
 function getTimer(x){
