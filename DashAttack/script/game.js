@@ -1,6 +1,9 @@
 var base = window.innerWidth / window.innerHeight
 
 class general{
+    beforeMenu = true
+    atMenu = true
+    optionMenu = false
     ready = true
     width = 800
     height = 400
@@ -21,6 +24,14 @@ class general{
     wave= 0
     pause = true
     lastPattern = -1
+    volume = 10
+    maxVolume = 20
+    buttonOnClick = []
+    beforeTransition = null
+    transition = true
+    timeTransition = 0
+    maxTimeTransition = 500
+    loading = false
 
     constructor(){
         if(this.width > window.innerWidth){
@@ -37,6 +48,7 @@ class general{
         this.paddingEntitiesEnemies = 3 * this.tileSize
     }
     endGame(){
+        music.stopMusic()
         this.pause = true
         this.showProgress('Your score')
     }
@@ -76,14 +88,11 @@ class general{
     }
     showProgress(titre){
         popup.setTitle(titre)
-
         let tab = this.getTabInfo(this)
-
         let bestTab = this.bestTabInfo()
         if(bestTab == null || bestTab.points < this.points){
             this.saveTabInfo(this)
         }
-
         let table = this.htmlTableInfo(tab)
         if(bestTab.points > this.points){
             table+= "<div>Last Best Score</div>" + this.htmlTableInfo(this.getTabInfo(bestTab))
@@ -91,24 +100,16 @@ class general{
         if(bestTab.points < this.points){
             table= "New Best Score" + table
         }
-        let element = '<div style="text-align: center;width:100%">'+table+'<button id="buttonRetry">Retry</button></div>'
-        
+        let element = '<div style="text-align: center;width:100%">'+table+'<button id="buttonRetry">Menu</button></div>'
         let contenu = document.createElement('div')
-
         popup.setContent(contenu)
-
         contenu.outerHTML = element
-
         popup.showPopup()
         var self = this
-
         document.getElementById('buttonRetry').addEventListener('click',function(e){
             e.preventDefault()
             self.reset()
             popup.hidePopup()
-            window.setTimeout(function(){
-                this.ready = true
-            },10)
         })
     }
     reset(){
@@ -123,7 +124,253 @@ class general{
         this.wave = 0
         this.pause = true
         this.lastPattern = -1
-        canvasInfo.ready = true
+        this.atMenu = true
+        window.setTimeout(function(){
+            canvasInfo.ready = true
+        },10)
+    }
+    menu(){
+        let width = 150
+        let height = 50
+        let y = canvasInfo.height / 2
+        let buttonDefaultPos = {
+            x: parseInt(canvasInfo.width - width)/ 2,
+            y: parseInt(y),
+            width: width,
+            height: height
+        }
+        this.buttonOnClick = []
+        if(this.beforeMenu){
+            push()
+            let ratio = sin(millis()%2000 / 500)
+            let tmp = 255 - 255 * ratio
+            let textColor = color(tmp, tmp, tmp);
+            let strokeColor = color(255 - tmp, 255 - tmp, 255 - tmp);
+            fill(textColor)
+            strokeWeight(2)
+            stroke(strokeColor)
+            textSize(30)
+            textAlign(CENTER)
+            text("Press a button", 0, buttonDefaultPos.y + 10, canvasInfo.width, buttonDefaultPos.height)
+            pop()
+        }else
+        if(this.loading){
+            push()
+            width = 100
+            let percentProgress = music.percentLoadedSound()
+            if(percentProgress == 1) this.loading = false
+            textSize(30)
+            textAlign(CENTER)
+            fill("#00000000")
+            rect((canvasInfo.width - width) / 2, buttonDefaultPos.y + 10, width, 20)
+            fill("#FFFFFF")
+            rect((canvasInfo.width - width) / 2, buttonDefaultPos.y + 10, width * percentProgress, 20)
+            strokeWeight(2)
+            stroke("#000000")
+            text("Loading", 0, buttonDefaultPos.y + 30, canvasInfo.width, buttonDefaultPos.height)
+            pop()
+        }else
+        if(this.atMenu){
+            this.buttonOnClick = [
+                {
+                    libelle: (this.time > 0 ? "RESUME" : "START"),
+                    click: function(){
+                        console.dir(this.libelle)
+                        if(canvasInfo.wave == 0){
+                            canvasInfo.startNewGame()
+                        }else{
+                            canvasInfo.atMenu = false
+                            canvasInfo.pause = false
+                        }
+                    }
+                },
+                {
+                    libelle: "OPTIONS",
+                    click: function(){
+                        canvasInfo.optionMenu = true
+                    }
+                }
+            ]
+            if(this.time > 0){
+                this.buttonOnClick.push({
+                    libelle: "RESET",
+                    click: function(){
+                        canvasInfo.reset()
+                    }
+                })
+            }
+            // Option
+            if(this.optionMenu){
+                this.buttonOnClick = [
+                    {
+                        libelle: "RETURN",
+                        click: function(){
+                            canvasInfo.optionMenu = false
+                        }
+                    },
+                    {
+                        libelle: "Volume",
+                        dragged: function(){
+                            let x = mouseX - this.pos.x
+                            if(canvasInfo.volume != Math.round(x / this.pos.width * canvasInfo.maxVolume)){
+                                music.fireFx('punch')
+                            }
+                            canvasInfo.volume = Math.round(x / this.pos.width * canvasInfo.maxVolume)
+                            music.updateVolume(canvasInfo.volume)
+                        },
+                        draw: function(){
+                            push()
+                            fill('#FF00FF0A')
+                            rect(this.pos.x, this.pos.y, canvasInfo.volume / canvasInfo.maxVolume * this.pos.width, this.pos.height, 5)
+                            pop()
+                        }
+                    },
+                ]
+            }
+            push()
+            this.buttonOnClick.forEach(function(button, index){
+                fill("white")
+                button.pos = Object.assign({}, buttonDefaultPos)
+                button.pos.y = canvasInfo.height / 2 + (height + 10) * index
+                let onhover = (mouseX > button.pos.x && mouseX < button.pos.x + button.pos.width) && (mouseY > button.pos.y && mouseY < button.pos.y + button.pos.height);
+                strokeWeight(onhover ? 4 : 1)
+                rect(button.pos.x, button.pos.y, button.pos.width, button.pos.height, 5)
+                fill("black")
+                strokeWeight(1)
+                textSize(30)
+                textAlign(CENTER)
+                text(button.libelle,button.pos.x, button.pos.y + 10, button.pos.width, button.pos.height, 5)
+                if(button.draw)
+                    button.draw()
+            })
+            pop()
+        }
+    }
+    mouseClick(e){
+        canvasInfo.firstActionUser()
+        canvasInfo.buttonOnClick.every(button => {
+            // console.dir(button.libelle)
+            // console.log(button.pos.x+" < " + Math.round(mouseX) + " < " + (button.pos.x + button.pos.width) + " __ " + button.pos.y+" < " + Math.round(mouseY) + " < " + (button.pos.y + button.pos.height))
+            // console.log((mouseX > button.pos.x && mouseX < button.pos.x + button.pos.width) && (mouseY > button.pos.y && mouseY < button.pos.y + button.pos.height) ? "true" : "false")
+            if(
+                (mouseX > button.pos.x && mouseX < button.pos.x + button.pos.width)
+                && (mouseY > button.pos.y && mouseY < button.pos.y + button.pos.height)
+            ){
+                if(button.click){
+                    button.click()
+                }
+                if(button.dragged){
+                    button.dragged()
+                }
+                return false
+            }
+            return true // continue if no one event fired
+        })
+    }
+    firstActionUser(){
+        if(this.beforeMenu) {
+            this.beforeMenu = false
+            this.loading = true
+            this.acceleration = this.baseAcceleration
+            music.setupAudio()
+        }
+    }
+    startNewGame(){
+        if(!this.ready) return
+        this.ready = false
+        heroes.actif = true
+        this.pause = false
+        this.acceleration = this.baseAcceleration * this.ratio
+        canvasInfo.atMenu = false
+        music.startMusic()
+        this.spawn()
+    }
+    
+    // create ennemy
+    spawn(){
+        this.wave++
+        this.acceleration*=1.01
+
+        this.newWave = timestamp
+
+        var left = 0
+        var right = this.width
+        let random = this.lastPattern
+
+        while(random == this.lastPattern && patternEnnemie.length>1 || random<0){ // not 2 times the same pattern or 1 patern availlable (test)
+            random = (Math.random() * patternEnnemie.length)
+            random-=random%1
+        }
+
+        let dir = Math.random() < 0.5 ? "left" : "right"
+        if(this.wave <= 3 && patternEnnemie.length>1){
+            switch(this.wave){
+                case 1:
+                    random = 0
+                    dir = "left"
+                    break;
+                case 2:
+                    random = 0
+                    dir = "right"
+                    break;
+                case 3:
+                    random = 1
+                    break;
+            }
+        }
+        this.lastPattern = random
+        var tab
+        for(let i = 0; i < patternEnnemie[random][0].length; i++){
+            for(let j = 0;j <= 1;j++){
+                let x = dir == "left" && j==0 || dir == "right" && j==1 ? left : right
+                let maxDist = 0
+                if(patternEnnemie[random][j][i] !== ""){
+                    var typeEnemy = getTypeEnnemie(patternEnnemie[random][j][i])
+                    let enemi = new enemy(x,this.baseLine,typeEnemy)
+                    if(dir == "left" && j==0 || dir == "right" && j==1){
+                        if(leftEnemies.length>0)
+                            enemi.before = leftEnemies[leftEnemies.length-1]
+                        leftEnemies.push(enemi)
+                        let addToLeft =leftEnemies[leftEnemies.length-1].getWidthPos()
+                        left-= addToLeft
+                        if(maxDist < addToLeft) maxDist = addToLeft
+                    }
+                    else{
+                        if(rightEnemies.length>0)
+                            enemi.before = rightEnemies[rightEnemies.length-1]
+                        rightEnemies.push(enemi)
+                        let addToRight =rightEnemies[rightEnemies.length-1].getWidthPos()
+                        right+= addToRight
+                        if(maxDist < addToRight) maxDist = addToRight
+                    }
+                }
+            }
+            left-= this.paddingEntitiesEnemies
+            right+= this.paddingEntitiesEnemies
+
+            tab = [
+                left * -1,
+                right - this.width
+            ]
+            if(tab[0] > tab[1])right = -left + this.width
+            if(tab[1] > tab[0])left = -(right - this.width)
+        }
     }
 }
 var canvasInfo = new general()
+
+function mouseDragged(e){ // onclick + onmove
+    canvasInfo.buttonOnClick.every(function(button){
+        if(
+            (mouseX > button.pos.x && mouseX < button.pos.x + button.pos.width)
+            && (mouseY > button.pos.y && mouseY < button.pos.y + button.pos.height)
+        ){
+            if(button.dragged){
+                // console.log("mousePressed -> " + button.libelle)
+                button.dragged()
+            }
+            return false
+        }
+        return true // continue if no one event fired
+    })
+}

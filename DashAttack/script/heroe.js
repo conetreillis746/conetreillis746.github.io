@@ -65,15 +65,15 @@ class heroe extends entite{
         return this.rangeDash + this.getWidth()/2
     }
     rightDash(){
-        if(canvasInfo.time == 0 && rightEnemies.length==0 && leftEnemies.length==0){
-            startNewGame() // if no game start
+        if(!canvasInfo.pause && canvasInfo.time == 0 && rightEnemies.length==0 && leftEnemies.length==0){
+            // canvasInfo.startNewGame() // if no game start
             return
         }
         if(this.detect().right && !this.dashAttack) this.dashAttack = "right"
     }
     leftDash(){
-        if(canvasInfo.time == 0 && rightEnemies.length==0 && leftEnemies.length==0){
-            startNewGame() // if no game start
+        if(!canvasInfo.pause && canvasInfo.time == 0 && rightEnemies.length==0 && leftEnemies.length==0){
+            // canvasInfo.startNewGame() // if no game start
             return
         }
         if(this.detect().left && !this.dashAttack) this.dashAttack = "left"
@@ -108,6 +108,7 @@ class heroe extends entite{
             if(maxDist < 0) maxDist = 0 // backDash isn't possibru
             if(this.speed > maxDist) this.speed = maxDist // cannot go futher than the ennemi
             if(this.speed < 0.00001){ // if can hit the enemi
+                music.fireFx("punch")
                 let isKilled = !enemiToHit.hit()
                 this.dashAttack = false
                 this.speed = 0.2

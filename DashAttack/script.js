@@ -4,6 +4,7 @@
 var leftEnemies = []
 var rightEnemies = []
 var entitiesPlus = []
+let canvasP5
 
 var heroes = null
 var mapInfo = {
@@ -16,7 +17,7 @@ var isMobile = false;
 
 // start creation
 function setup() {
-    createCanvas(canvasInfo.width, canvasInfo.height)
+    canvasP5 = createCanvas(canvasInfo.width, canvasInfo.height)
     heroes = new heroe((canvasInfo.width - defaultHero.width) / 2, canvasInfo.baseLine, defaultHero)
 
     // controller heroe
@@ -29,11 +30,11 @@ function setup() {
                 RightClicked()
             }
         }
-        canvas.addEventListener('touchstart', logInfo);
-        // canvas.addEventListener('touchend', logInfo);
-        // canvas.addEventListener('touchcancel', logInfo);
-        // canvas.addEventListener('touchmove', logInfo);
-        // log('Initialisation.');
+        canvas.addEventListener('touchstart', logInfo)
+        // canvas.addEventListener('touchend', logInfo)
+        // canvas.addEventListener('touchcancel', logInfo)
+        // canvas.addEventListener('touchmove', logInfo)
+        // log('Initialisation.')
     }else{
         document.addEventListener('mousedown', function(e){
              // event on press
@@ -53,6 +54,7 @@ function setup() {
 
     mapInfo.map = listImage.background.get()
     mapInfo.map.resize(canvasInfo.width, canvasInfo.height)
+    canvasP5.mousePressed(canvasInfo.mouseClick)
 }
 
 var tab_fps = []
@@ -78,19 +80,20 @@ const listImgPlus = {
 function showMap(){
     tint(255)
 
-    push()
+    push() // background blue
     fill("#6096ff")
     rect(0,0,canvasInfo.width,canvasInfo.height)
     pop()
     for (const [index, img] of Object.entries(listImgPlus)) {
         if(img.x == undefined){
-            img.x = 
+            img.x = random(0,canvasInfo.width)
             img.y = canvasInfo.height - listImage[index].height
         }
         let mapx = img.x
-        let diffMapx = canvasInfo.width - mapx
+        let diffMapx = canvasInfo.width - mapx + listImage[index].width
         copy(listImage[index], diffMapx, 0, mapx, listImage[index].height, 0, img.y, mapx, listImage[index].height)
         copy(listImage[index], 0, 0, diffMapx, listImage[index].height, mapx, img.y, diffMapx, listImage[index].height)
+        if(listImgPlus[index].x < -listImage[index].width) listImgPlus[index].x = canvasInfo.width
     }
 
     mapInfo.x = (mapInfo.x + canvasInfo.width) % canvasInfo.width
@@ -109,37 +112,45 @@ function draw() {
 
     showMap()
 
-    if(canvasInfo.wave <= 2){
-        showControl(leftEnemies.length > 0 ? "left" : "right")
-    }
+    if(!canvasInfo.atMenu){
+        if(canvasInfo.wave <= 2 && canvasInfo.wave > 0){
+            showControl(leftEnemies.length > 0 ? "left" : "right")
+        }
+        if(canvasInfo.time > 0 && rightEnemies.length == 0 && leftEnemies.length ==0){
+            canvasInfo.spawn() // respawn if game is in progress and after all enemies are killed
+        }
+        /* show the line bottom */
+        // strokeWeight(1)
+        // fill(255)
+        // rect(0, canvasInfo.baseLine, canvasInfo.width, 2)
+        /* game updater */
+        rightEnemies.forEach(function(enemi){
+            if(!canvasInfo.pause)enemi.update()
+            enemi.draw()
+        })
+        leftEnemies.forEach(function(enemi){
+            if(!canvasInfo.pause)enemi.update()
+            enemi.draw()
+        })
+        heroes.draw()
+        entitiesPlus.forEach(function(enemi, index){
+            if(!canvasInfo.pause)enemi.update()
+            enemi.draw()
+            if(!enemi.alive) entitiesPlus.splice(index,1)
+        })
 
-    if(canvasInfo.time ==0){ // game doesn't start
-        showControl()
+        music.draw()
     }
-    if(canvasInfo.time > 0 && rightEnemies.length == 0 && leftEnemies.length ==0){
-        spawn() // respawn if game is in progress and after all enemies are killed
-    }
-    // show the line bottom
-    // strokeWeight(1)
-    // fill(255)
-    // rect(0, canvasInfo.baseLine, canvasInfo.width, 2)
+    showWave()
 
-    // game updater
-    rightEnemies.forEach(function(enemi){
-        if(!canvasInfo.pause)enemi.update()
-        enemi.draw()
-    })
-    leftEnemies.forEach(function(enemi){
-        if(!canvasInfo.pause)enemi.update()
-        enemi.draw()
-    })
-    heroes.draw()
-    entitiesPlus.forEach(function(enemi, index){
-        if(!canvasInfo.pause)enemi.update()
-        enemi.draw()
-        if(!enemi.alive) entitiesPlus.splice(index,1)
-    })
+    if(!canvasInfo.pause) canvasInfo.time++
+    // showMeFPS()
+    test()
+    
+    canvasInfo.menu()
+}
 
+function showWave(){
     if(canvasInfo.newWave + 1500 > timestamp){
         let opacity = (timestamp - canvasInfo.newWave) / 1500 * 255
         let size = 30
@@ -150,10 +161,6 @@ function draw() {
         text("Wave " + canvasInfo.wave, heroes.x - (txt.length * size / 4), canvasInfo.height - heroes.y)
         pop()
     }
-
-    if(!canvasInfo.pause) canvasInfo.time++
-    // showMeFPS()
-    test()
 }
 
 function test(){
@@ -164,15 +171,6 @@ function test(){
     //     rect(entitiesPlus[0].x , entitiesPlus[0].y , width, width)
     //     rect(entitiesPlus[0].x , heroes.y , width, width)
     // }
-}
-
-function startNewGame(){
-    if(!canvasInfo.ready) return
-    canvasInfo.ready = false
-    heroes.actif = true
-    canvasInfo.pause = false
-    canvasInfo.acceleration = canvasInfo.baseAcceleration * canvasInfo.ratio
-    spawn()
 }
 
 function getTypeEnnemie(libelle){
@@ -192,77 +190,6 @@ function getTypeEnnemie(libelle){
     retour.health += moreAttribute.health
     retour.health = retour.health * moreAttribute.multhealth
     return retour
-}
-
-// create ennemy
-function spawn(){
-    canvasInfo.wave++
-    canvasInfo.acceleration*=1.01
-
-    canvasInfo.newWave = timestamp
-
-    var left = 0
-    var right = canvasInfo.width
-    let random = canvasInfo.lastPattern
-
-    while(random == canvasInfo.lastPattern && patternEnnemie.length>1 || random<0){ // not 2 times the same pattern or 1 patern availlable (test)
-        random = (Math.random() * patternEnnemie.length)
-        random-=random%1
-    }
-
-    let dir = Math.random() < 0.5 ? "left" : "right"
-    if(canvasInfo.wave <= 3 && patternEnnemie.length>1){
-        switch(canvasInfo.wave){
-            case 1:
-                random = 0
-                dir = "left"
-                break;
-            case 2:
-                random = 0
-                dir = "right"
-                break;
-            case 3:
-                random = 1
-                break;
-        }
-    }
-    canvasInfo.lastPattern = random
-    var tab
-    for(let i = 0; i < patternEnnemie[random][0].length; i++){
-        for(let j = 0;j <= 1;j++){
-            let x = dir == "left" && j==0 || dir == "right" && j==1 ? left : right
-            let maxDist = 0
-            if(patternEnnemie[random][j][i] !== ""){
-                var typeEnemy = getTypeEnnemie(patternEnnemie[random][j][i])
-                let enemi = new enemy(x,canvasInfo.baseLine,typeEnemy)
-                if(dir == "left" && j==0 || dir == "right" && j==1){
-                    if(leftEnemies.length>0)
-                        enemi.before = leftEnemies[leftEnemies.length-1]
-                    leftEnemies.push(enemi)
-                    let addToLeft =leftEnemies[leftEnemies.length-1].getWidthPos()
-                    left-= addToLeft
-                    if(maxDist < addToLeft) maxDist = addToLeft
-                }
-                else{
-                    if(rightEnemies.length>0)
-                        enemi.before = rightEnemies[rightEnemies.length-1]
-                    rightEnemies.push(enemi)
-                    let addToRight =rightEnemies[rightEnemies.length-1].getWidthPos()
-                    right+= addToRight
-                    if(maxDist < addToRight) maxDist = addToRight
-                }
-            }
-        }
-        left-= canvasInfo.paddingEntitiesEnemies
-        right+= canvasInfo.paddingEntitiesEnemies
-
-        tab = [
-            left * -1,
-            right - canvasInfo.width
-        ]
-        if(tab[0] > tab[1])right = -left + canvasInfo.width
-        if(tab[1] > tab[0])left = -(right - canvasInfo.width)
-    }
 }
 
 // move entites except heroe to 

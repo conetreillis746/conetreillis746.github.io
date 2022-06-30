@@ -49,19 +49,12 @@ class enemy extends entite{
 
         // move to the hero
         let changePosition = this.getSpeed() * canvasInfo.acceleration
-        if(this.whatDirection() == "left"){
-            this.x += changePosition
-            // if enemy x + enemy width < heros x - hero width
-            if(this.x + my_mid_witdh > heroes.x - hero_mid_witdh){
-                canvasInfo.endGame()
-            }
-        }
-        if(this.whatDirection() == "right"){
-            this.x -= changePosition
-            // if enemy x + enemy width < heros x - hero width
-            if(this.x - my_mid_witdh < heroes.x + hero_mid_witdh){
-                canvasInfo.endGame()
-            }
+        this.x += (this.whatDirection() == "left" ? 1 : -1) * changePosition
+        if(
+            this.whatDirection() == "left" && this.x + my_mid_witdh > heroes.x - hero_mid_witdh // if enemy x + enemy width < heros x - hero width
+            || this.whatDirection() == "right" && this.x - my_mid_witdh < heroes.x + hero_mid_witdh // if enemy x + enemy width < heros x - hero width
+        ){
+            canvasInfo.endGame()
         }
     }
     showHealtBar(){
