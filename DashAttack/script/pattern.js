@@ -52,7 +52,7 @@ var typeEnnemie = {
         showHealtBar(){
             let height = 5 * canvasInfo.ratio
             let width = 20 * canvasInfo.ratio
-            var y = canvasInfo.baseLine + 15 * canvasInfo.ratio
+            let y = canvasInfo.baseLine + 15 * canvasInfo.ratio
             let directionLeft = this.whatDirection()=='left'
             for(let i = 1; i <= this.health; i++){
                 y+= 2 * canvasInfo.ratio + height

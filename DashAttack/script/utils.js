@@ -38,16 +38,16 @@ class Popup{
         this.div.popupContainer.style.opacity = "0"
     }
 }
-let popup = new Popup()
 
 function insideCircle(x, y, cx, cy, r) {
     return sq(x - cx) + sq(y - cy) < sq(r)
 }
 
 function getInRange(cx, cy, radius, entities) {
-    var results = []
-    for (var i = 0; i < entities.length; i++) {
-        var e = entities[i]
+    let results = []
+    let e
+    for (let i = 0; i < entities.length; i++) {
+        e = entities[i]
         if (insideCircle(e.x, e.y, cx, cy, radius + 1 + e.getWidth() / 2)) {
             results.push(e)
         }
@@ -56,13 +56,13 @@ function getInRange(cx, cy, radius, entities) {
 }
 
 function getNearest(entities, pos, ignore) {
-    var lowestDist = 10000
-    var chosen = entities[0]
-    for (var i = 0; i < entities.length; i++) {
-        var e = entities[i]
+    let lowestDist = 10000
+    let chosen = entities[0]
+    for (let i = 0; i < entities.length; i++) {
+        let e = entities[i]
         if (typeof ignore !== 'undefined' && ignore.includes(e)) continue
-        var epos = createVector(e.x,e.y)
-        var dist = pos.dist(epos)
+        let epos = createVector(e.x,e.y)
+        let dist = pos.dist(epos)
         if (dist < lowestDist) {
             lowestDist = dist
             chosen = e
@@ -139,11 +139,11 @@ function preload() {
 var timestamp = null
 const changeImg = 3600 / 2
 function showControl(direction){
-    var opacity = (timestamp % changeImg) / changeImg * (255 * 2)
+    let opacity = (timestamp % changeImg) / changeImg * (255 * 2)
     if(opacity > 255) opacity = 255 - opacity % 255
 
-    var leftIcon = null
-    var rightIcon = null
+    let leftIcon = null
+    let rightIcon = null
 
     if(timestamp % (changeImg * 2) / changeImg <= 1){
         leftIcon = listImage.leftButton

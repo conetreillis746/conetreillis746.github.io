@@ -6,7 +6,7 @@ class entite{
         this.baseHeight = canvasInfo.baseLine
         this.x = x
         this.y = y
-        for(var k in option) this[k] = option[k]
+        for(let k in option) this[k] = option[k]
         this.constructorplus(x,y,option)
     }
     constructorplus(x,y, option){}

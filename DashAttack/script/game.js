@@ -1,5 +1,3 @@
-var base = window.innerWidth / window.innerHeight
-
 class general{
     beforeMenu = true
     atMenu = true
@@ -32,6 +30,9 @@ class general{
     timeTransition = 0
     maxTimeTransition = 500
     loading = false
+    autoPlay = false
+    godMod = false
+    popup = null
 
     constructor(){
         if(this.width > window.innerWidth){
@@ -46,11 +47,15 @@ class general{
         this.tileSize = this.ratio * 10
         this.baseLine = this.height - 55 * this.ratio
         this.paddingEntitiesEnemies = 3 * this.tileSize
+
+        this.popup = new Popup()
     }
     endGame(){
-        music.stopMusic()
-        this.pause = true
-        this.showProgress('Your score')
+        if(!this.godMod){
+            music.stopMusic()
+            this.pause = true
+            this.showProgress('Your score')
+        }
     }
     getTabInfo(info){
         return [
@@ -78,16 +83,16 @@ class general{
         tab.forEach(function(row){
             row.forEach(function(value,index){
                 if(value.html == undefined){
-                    tr[index]+= "<td width='"+Math.round(1/tab.length * 100)+"%'>"+value+"</td>"
+                    tr[index]+= "<td width='"+~~(1/tab.length * 100)+"%'>"+value+"</td>"
                 }else{
-                    tr[index]+= "<td width='"+Math.round(1/tab.length * 100)+"%' style='"+value.style+"'>"+value.html+"</td>"
+                    tr[index]+= "<td width='"+~~(1/tab.length * 100)+"%' style='"+value.style+"'>"+value.html+"</td>"
                 }
             })
         })
         return '<table style="width:100%"><tr>'+tr[0]+'</tr><tr>'+tr[1]+'</tr></table>'
     }
     showProgress(titre){
-        popup.setTitle(titre)
+        this.popup.setTitle(titre)
         let tab = this.getTabInfo(this)
         let bestTab = this.bestTabInfo()
         if(bestTab == null || bestTab.points < this.points){
@@ -102,14 +107,14 @@ class general{
         }
         let element = '<div style="text-align: center;width:100%">'+table+'<button id="buttonRetry">Menu</button></div>'
         let contenu = document.createElement('div')
-        popup.setContent(contenu)
+        this.popup.setContent(contenu)
         contenu.outerHTML = element
-        popup.showPopup()
-        var self = this
+        this.popup.showPopup()
+        let self = this
         document.getElementById('buttonRetry').addEventListener('click',function(e){
             e.preventDefault()
             self.reset()
-            popup.hidePopup()
+            self.popup.hidePopup()
         })
     }
     reset(){
@@ -175,7 +180,6 @@ class general{
                 {
                     libelle: (this.time > 0 ? "RESUME" : "START"),
                     click: function(){
-                        console.dir(this.libelle)
                         if(canvasInfo.wave == 0){
                             canvasInfo.startNewGame()
                         }else{
@@ -212,10 +216,10 @@ class general{
                         libelle: "Volume",
                         dragged: function(){
                             let x = mouseX - this.pos.x
-                            if(canvasInfo.volume != Math.round(x / this.pos.width * canvasInfo.maxVolume)){
+                            if(canvasInfo.volume != ~~(x / this.pos.width * canvasInfo.maxVolume)){
                                 music.fireFx('punch')
                             }
-                            canvasInfo.volume = Math.round(x / this.pos.width * canvasInfo.maxVolume)
+                            canvasInfo.volume = ~~(x / this.pos.width * canvasInfo.maxVolume)
                             music.updateVolume(canvasInfo.volume)
                         },
                         draw: function(){
@@ -250,7 +254,7 @@ class general{
         canvasInfo.firstActionUser()
         canvasInfo.buttonOnClick.every(button => {
             // console.dir(button.libelle)
-            // console.log(button.pos.x+" < " + Math.round(mouseX) + " < " + (button.pos.x + button.pos.width) + " __ " + button.pos.y+" < " + Math.round(mouseY) + " < " + (button.pos.y + button.pos.height))
+            // console.log(button.pos.x+" < " + ~~(mouseX) + " < " + (button.pos.x + button.pos.width) + " __ " + button.pos.y+" < " + ~~(mouseY) + " < " + (button.pos.y + button.pos.height))
             // console.log((mouseX > button.pos.x && mouseX < button.pos.x + button.pos.width) && (mouseY > button.pos.y && mouseY < button.pos.y + button.pos.height) ? "true" : "false")
             if(
                 (mouseX > button.pos.x && mouseX < button.pos.x + button.pos.width)
@@ -282,7 +286,6 @@ class general{
         this.pause = false
         this.acceleration = this.baseAcceleration * this.ratio
         canvasInfo.atMenu = false
-        music.startMusic()
         this.spawn()
     }
     
@@ -293,8 +296,8 @@ class general{
 
         this.newWave = timestamp
 
-        var left = 0
-        var right = this.width
+        let left = 0
+        let right = this.width
         let random = this.lastPattern
 
         while(random == this.lastPattern && patternEnnemie.length>1 || random<0){ // not 2 times the same pattern or 1 patern availlable (test)
@@ -319,13 +322,14 @@ class general{
             }
         }
         this.lastPattern = random
-        var tab
+        let tab
+        let typeEnemy
         for(let i = 0; i < patternEnnemie[random][0].length; i++){
             for(let j = 0;j <= 1;j++){
                 let x = dir == "left" && j==0 || dir == "right" && j==1 ? left : right
                 let maxDist = 0
                 if(patternEnnemie[random][j][i] !== ""){
-                    var typeEnemy = getTypeEnnemie(patternEnnemie[random][j][i])
+                    typeEnemy = getTypeEnnemie(patternEnnemie[random][j][i])
                     let enemi = new enemy(x,this.baseLine,typeEnemy)
                     if(dir == "left" && j==0 || dir == "right" && j==1){
                         if(leftEnemies.length>0)
@@ -357,7 +361,6 @@ class general{
         }
     }
 }
-var canvasInfo = new general()
 
 function mouseDragged(e){ // onclick + onmove
     canvasInfo.buttonOnClick.every(function(button){
@@ -374,3 +377,6 @@ function mouseDragged(e){ // onclick + onmove
         return true // continue if no one event fired
     })
 }
+
+// canvasInfo.godMod = true;
+// canvasInfo.autoPlay = true;

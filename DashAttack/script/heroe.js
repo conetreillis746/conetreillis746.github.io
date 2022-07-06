@@ -1,17 +1,3 @@
-const defaultHero = {
-    combo: 0,
-    actif: false,
-    range: 6 * canvasInfo.tileSize,
-    rangeDash: 15 * canvasInfo.tileSize,
-    width: 2.5,
-    height: 8,
-    dashAttack: false,
-    color:255,
-    maxSpeed: 20,
-    speed: 0.2,
-    comboTime:0,
-}
-
 class heroe extends entite{
     showCombo(){
         if(this.comboTime > 0) this.comboTime--
@@ -79,43 +65,48 @@ class heroe extends entite{
         if(this.detect().left && !this.dashAttack) this.dashAttack = "left"
     }
     detect(){
-        var detect = {right: false, left: false}
+        let detect = {right: false, left: false}
+        let list
         // si le heros detecte un ennemi à porté
-        var list = getInRange(this.x,this.y,this.getRange(),rightEnemies)
-        if(list.length > 0)
+        list = getInRange(this.x,this.y,this.getRange(),rightEnemies)
+        if(list.length > 0){
             detect.right = true
-        var list = getInRange(this.x,this.y,this.getRange(),leftEnemies)
-        if(list.length > 0)
+            if(canvasInfo.autoPlay && this.dashAttack == "")
+                this.dashAttack = "right"
+        }
+        list = getInRange(this.x,this.y,this.getRange(),leftEnemies)
+        if(list.length > 0){
             detect.left = true
+            if(canvasInfo.autoPlay && this.dashAttack == "")
+                this.dashAttack = "left"
+        }
         return detect
     }
     update(){
         this.showRange()
-        if(this.combo>1){
+        if(this.combo > 1){
             this.showCombo()
         }
         if(canvasInfo.pause) return
         if(this.dashAttack !== false){ // si le heros est en train de dash
-            var pos = createVector(this.x,this.y)
-            var listEnemies = (this.dashAttack == "right"? rightEnemies: leftEnemies)
+            let pos = createVector(this.x,this.y)
+            let listEnemies = (this.dashAttack == "right"? rightEnemies: leftEnemies)
             let enemiToHit = getNearest(listEnemies,pos)
             this.speed+= (this.speed * 1.3) * canvasInfo.acceleration
             if(this.speed > this.maxSpeed)
                 this.speed = this.maxSpeed
-            var maxDist = this.x - enemiToHit.x
-            if(maxDist<0) maxDist = maxDist * -1
+            let maxDist = this.x - enemiToHit.x
+            if(maxDist < 0) maxDist = maxDist * -1
             maxDist = maxDist - this.range - enemiToHit.getWidth()/2 - this.getWidth()/2
             if(maxDist < 0) maxDist = 0 // backDash isn't possibru
             if(this.speed > maxDist) this.speed = maxDist // cannot go futher than the ennemi
             if(this.speed < 0.00001){ // if can hit the enemi
                 music.fireFx("punch")
-                let isKilled = !enemiToHit.hit()
                 this.dashAttack = false
                 this.speed = 0.2
-                this.isCombo(isKilled, enemiToHit)
+                this.isCombo(!enemiToHit.hit(), enemiToHit)
             }else{
-                let speed = this.speed
-                if(this.dashAttack == "right") speed = speed * -1
+                let speed = this.speed * (this.dashAttack == "right"?-1:1)
                 moveAll(speed)
             }
         }

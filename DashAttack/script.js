@@ -4,12 +4,28 @@
 var leftEnemies = []
 var rightEnemies = []
 var entitiesPlus = []
-let canvasP5
+var canvasP5
 
 var heroes = null
 var mapInfo = {
     map: null,
     x: 0
+}
+
+var canvasInfo = new general()
+
+const defaultHero = {
+    combo: 0,
+    actif: false,
+    range: 6 * canvasInfo.tileSize,
+    rangeDash: 15 * canvasInfo.tileSize,
+    width: 2.5,
+    height: 8,
+    dashAttack: false,
+    color:255,
+    maxSpeed: 20,
+    speed: 0.2,
+    comboTime:0,
 }
 
 var isMobile = false;
@@ -31,9 +47,6 @@ function setup() {
             }
         }
         canvas.addEventListener('touchstart', logInfo)
-        // canvas.addEventListener('touchend', logInfo)
-        // canvas.addEventListener('touchcancel', logInfo)
-        // canvas.addEventListener('touchmove', logInfo)
         // log('Initialisation.')
     }else{
         document.addEventListener('mousedown', function(e){
@@ -84,25 +97,24 @@ function showMap(){
     fill("#6096ff")
     rect(0,0,canvasInfo.width,canvasInfo.height)
     pop()
+    let diffMapx
     for (const [index, img] of Object.entries(listImgPlus)) {
         if(img.x == undefined){
             img.x = random(0,canvasInfo.width)
             img.y = canvasInfo.height - listImage[index].height
         }
-        let mapx = img.x
-        let diffMapx = canvasInfo.width - mapx + listImage[index].width
-        copy(listImage[index], diffMapx, 0, mapx, listImage[index].height, 0, img.y, mapx, listImage[index].height)
-        copy(listImage[index], 0, 0, diffMapx, listImage[index].height, mapx, img.y, diffMapx, listImage[index].height)
+        diffMapx = canvasInfo.width - img.x + listImage[index].width
+        copy(listImage[index], diffMapx, 0, img.x, listImage[index].height, 0, img.y, img.x, listImage[index].height)
+        copy(listImage[index], 0, 0, diffMapx, listImage[index].height, img.x, img.y, diffMapx, listImage[index].height)
         if(listImgPlus[index].x < -listImage[index].width) listImgPlus[index].x = canvasInfo.width
     }
 
     mapInfo.x = (mapInfo.x + canvasInfo.width) % canvasInfo.width
-    let mapx = mapInfo.x
-    let diffMapx = canvasInfo.width - mapx
+    diffMapx = canvasInfo.width - mapInfo.x
 
     // use only usefull image => use less ressources : more fps (than use fn image)
-    copy(mapInfo.map, diffMapx, 0, mapx, mapInfo.map.height, 0, 0, mapx, canvasInfo.height)
-    copy(mapInfo.map, 0, 0, diffMapx, mapInfo.map.height, mapx, 0, diffMapx, canvasInfo.height)
+    copy(mapInfo.map, diffMapx, 0, mapInfo.x, mapInfo.map.height, 0, 0, mapInfo.x, canvasInfo.height)
+    copy(mapInfo.map, 0, 0, diffMapx, mapInfo.map.height, mapInfo.x, 0, diffMapx, canvasInfo.height)
 }
 
 // each time
@@ -139,7 +151,8 @@ function draw() {
             if(!enemi.alive) entitiesPlus.splice(index,1)
         })
 
-        music.draw()
+        if(!canvasInfo.pause) // don't draw or start music if game paused
+            music.draw()
     }
     showWave()
 
@@ -174,7 +187,7 @@ function test(){
 }
 
 function getTypeEnnemie(libelle){
-    var moreAttribute = {
+    let moreAttribute = {
         health: 0,
         multhealth: 1,
     }
@@ -186,7 +199,7 @@ function getTypeEnnemie(libelle){
         moreAttribute.multhealth++
         libelle = libelle.replace('*','')
     }
-    var retour = Object.assign({}, typeEnnemie[libelle])
+    let retour = Object.assign({}, typeEnnemie[libelle])
     retour.health += moreAttribute.health
     retour.health = retour.health * moreAttribute.multhealth
     return retour
@@ -196,22 +209,22 @@ function getTypeEnnemie(libelle){
 function moveAll(move, onlyOneDirection){
     if(onlyOneDirection != undefined){
         if(onlyOneDirection == "right"){
-            for (var i = 0; i < rightEnemies.length; i++) {
+            for (let i = 0; i < rightEnemies.length; i++) {
                 rightEnemies[i].x+= move
             }
         }else{
-            for (var i = 0; i < leftEnemies.length; i++) {
+            for (let i = 0; i < leftEnemies.length; i++) {
                 leftEnemies[i].x-= move
             }
         }
     }else{
-        for (var i = 0; i < rightEnemies.length; i++) {
+        for (let i = 0; i < rightEnemies.length; i++) {
             rightEnemies[i].x+= move
         }
-        for (var i = 0; i < leftEnemies.length; i++) {
+        for (let i = 0; i < leftEnemies.length; i++) {
             leftEnemies[i].x+= move
         }
-        for (var i = 0; i < entitiesPlus.length; i++) {
+        for (let i = 0; i < entitiesPlus.length; i++) {
             entitiesPlus[i].x+= move
         }
         mapInfo.x+= move

@@ -7,7 +7,12 @@ class configMusic{
     startMusic(){
         if(this.actualSound != null) this.actualSound.stop()
         let tab = Object.keys(this.music)
-        this.actualSound = this.music[random(tab)]
+        let newSong = null
+        // si la musique est différente de la dernière jouer ou qu'elle n'est pas encore choisi
+        while(newSong == null || this.actualSound != null && this.actualSound.file == newSong.file){
+            newSong = this.music[random(tab)]
+        }
+        this.actualSound = newSong
         this.actualSound.play()
     }
     
@@ -16,7 +21,11 @@ class configMusic{
     }
     
     stopMusic(){
-        this.actualSound.fade(0,4)
+        let soundToStop = this.actualSound
+        soundToStop.fade(0,4)
+        window.setTimeout(function(){
+            soundToStop.stop()
+        }, 4000)
     }
     
     setupAudio(){
@@ -28,20 +37,16 @@ class configMusic{
         this.setVolume()
     }
     
-    muteMusic(){
-        this.setVolume(0)
-    }
-    
     showMusic(){
-        pop()
+        push()
         let textColor = color(0, 0, 0);
         fill(textColor)
         text(this.actualSound.file.replace("assets/music/",''),5,13)
-        push()
+        pop()
     }
     
     setVolume(){
-        var self = this
+        let self = this
         let value = 1 / Math.pow(1.5,20 - canvasInfo.volume)
         Object.keys(self.fx).every(function(item){
             self.fx[item].setVolume(value)
@@ -58,7 +63,7 @@ class configMusic{
     }
     
     LoadingSound(){
-        var self = this
+        let self = this
         function loaded(){
             self.LoadedSound++
             if(self.LoadedSound == Object.keys(self.fx).length + Object.keys(self.music).length){
@@ -66,10 +71,12 @@ class configMusic{
             }
         }
         this.fx.punch = loadSound('assets/fx/short_punch.wav',loaded)
-        this.music.flames = loadSound('assets/music/Sound Stabs - ONE - 01 Flames.mp3',loaded)
-        this.music.freedom = loadSound('assets/music/Sound Stabs - ONE - 02 Freedom.mp3',loaded)
-        this.music.chainsaw = loadSound('assets/music/Sound Stabs - ONE - 03 Chainsaw.mp3',loaded)
-        this.music.zombies = loadSound('assets/music/Sound Stabs - ONE - 04 The Attack of The Hipster Zombies.mp3',loaded)
+        if(!isMobile){
+            this.music.flames = loadSound('assets/music/Sound Stabs - ONE - 01 Flames.mp3',loaded)
+            // this.music.freedom = loadSound('assets/music/Sound Stabs - ONE - 02 Freedom.mp3',loaded)
+            // this.music.chainsaw = loadSound('assets/music/Sound Stabs - ONE - 03 Chainsaw.mp3',loaded)
+            // this.music.zombies = loadSound('assets/music/Sound Stabs - ONE - 04 The Attack of The Hipster Zombies.mp3',loaded)
+        }
         this.music.theCannery = loadSound('assets/music/The Cannery.mp3',loaded)
     }
 
