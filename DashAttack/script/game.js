@@ -97,6 +97,7 @@ class general{
         let bestTab = this.bestTabInfo()
         if(bestTab == null || bestTab.points < this.points){
             this.saveTabInfo(this)
+            bestTab = this.bestTabInfo()
         }
         let table = this.htmlTableInfo(tab)
         if(bestTab.points > this.points){
